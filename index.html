@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ناشر المواقع</title>
+<meta name="theme-color" content="#f3f8f6">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🚀%3C/text%3E%3C/svg%3E">
+<script>
+(function(){try{var t=JSON.parse(localStorage.getItem('ghpub:theme'));if(!t)t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';if(t==='dark')document.documentElement.classList.add('dark');document.querySelector('meta[name=theme-color]').content=t==='dark'?'#09090b':'#f3f8f6'}catch(e){}})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Tajawal','system-ui','sans-serif']},colors:{accent:{50:'#ecfdf5',100:'#d1fae5',200:'#a7f3d0',300:'#6ee7b7',400:'#34d399',500:'#10b981',600:'#059669',700:'#047857',900:'#064e3b',950:'#022c22'}}}}}
+</script>
+<style type="text/tailwindcss">
+@layer components{
+ .card{@apply rounded-3xl border border-slate-200/80 bg-white p-4 shadow-[0_1px_2px_rgba(2,44,34,.04),0_10px_28px_-14px_rgba(2,44,34,.14)] dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-none sm:p-5}
+ .btn{@apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-2xl px-4 text-sm font-bold transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#f3f8f6] active:scale-[.97] disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-offset-zinc-950}
+ .btn-p{@apply btn bg-gradient-to-b from-accent-500 to-accent-600 text-white shadow-lg shadow-accent-600/25 hover:from-accent-400 hover:to-accent-500}
+ .btn-s{@apply btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-zinc-700 dark:bg-zinc-800/60 dark:text-zinc-100 dark:hover:bg-zinc-800}
+ .btn-t{@apply btn bg-accent-50 text-accent-700 hover:bg-accent-100 dark:bg-accent-950/60 dark:text-accent-300 dark:hover:bg-accent-900/60}
+ .btn-x{@apply btn bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/70}
+ .btn-d{@apply btn bg-red-600 text-white hover:bg-red-700}
+ .ibtn{@apply inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-slate-600 transition duration-200 hover:bg-accent-50 hover:text-accent-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 dark:text-zinc-300 dark:hover:bg-accent-950/50 dark:hover:text-accent-400}
+ .inp{@apply min-h-[46px] w-full rounded-2xl border border-slate-200 bg-slate-50/60 px-3.5 text-sm text-slate-900 placeholder-slate-400 transition duration-200 focus:border-accent-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-accent-500/15 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100 dark:placeholder-zinc-600 dark:focus:bg-zinc-950}
+ .lbl{@apply mb-1.5 block text-xs font-bold text-slate-600 dark:text-zinc-400}
+ .chip{@apply flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent-100 text-accent-700 dark:bg-accent-950/70 dark:text-accent-400}
+}
+body{background:#f3f8f6;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.dark body{background:#09090b}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(70% 45% at 50% -5%,rgba(16,185,129,.20),transparent 70%),radial-gradient(55% 30% at 100% 100%,rgba(16,185,129,.09),transparent 70%)}
+.material-symbols-outlined{font-size:22px;line-height:1;vertical-align:middle}
+.panel{display:none}.panel.on{display:block}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body class="min-h-screen font-sans text-slate-800 antialiased dark:text-zinc-200">
+
+<header class="sticky top-0 z-30 border-b border-slate-200/60 bg-[#f3f8f6]/80 backdrop-blur-xl dark:border-zinc-800/80 dark:bg-zinc-950/80">
+ <div class="mx-auto flex max-w-2xl items-center gap-3 px-4 py-3">
+  <span class="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-accent-400 to-accent-700 text-white shadow-lg shadow-accent-600/30"><span class="material-symbols-outlined">rocket_launch</span></span>
+  <div class="min-w-0 flex-1"><h1 id="appName" class="truncate text-lg font-extrabold leading-tight"></h1><p class="truncate text-xs text-slate-500 dark:text-zinc-400"><bdi id="repoLbl"></bdi></p></div>
+  <button id="btnTheme" class="ibtn" aria-label="تبديل الوضع"><span class="material-symbols-outlined" id="themeIcon">dark_mode</span></button>
+  <button id="btnSettings" class="ibtn" aria-label="الإعدادات"><span class="material-symbols-outlined">settings</span></button>
+ </div>
+</header>
+
+<main class="mx-auto max-w-2xl px-4 py-5">
+
+ <section id="vList" class="space-y-4">
+  <div class="flex items-end gap-2">
+   <div class="min-w-0 flex-1"><h2 class="text-2xl font-extrabold">مشاريعي</h2><p class="text-xs text-slate-500 dark:text-zinc-400"><span id="pcount">0</span> مشروع منشور</p></div>
+   <button id="btnRef" class="ibtn" aria-label="تحديث القائمة"><span class="material-symbols-outlined">refresh</span></button>
+   <button id="btnNew" class="btn-p"><span class="material-symbols-outlined">add</span>جديد</button>
+  </div>
+  <div id="pstate" class="card flex flex-col items-center gap-3 border-dashed py-10 text-center text-sm text-slate-500 dark:text-zinc-400"></div>
+  <ul id="plist" class="space-y-3"></ul>
+ </section>
+
+ <section id="vWiz" class="hidden space-y-4">
+  <div class="flex items-center gap-2"><button id="btnWBack" class="ibtn" aria-label="العودة للمشاريع"><span class="material-symbols-outlined">arrow_forward</span></button><h2 id="wizTitle" class="truncate text-xl font-extrabold"></h2></div>
+  <ol class="flex items-start gap-2 px-2" id="stepper"></ol>
+
+  <section class="card panel on" data-step="1">
+   <div class="mb-4 flex items-center gap-3"><span class="chip"><span class="material-symbols-outlined">badge</span></span><div><h2 class="font-extrabold">الهوية والقالب</h2><p class="text-xs text-slate-500 dark:text-zinc-400">ملفات PWA تُجهَّز من هذه البيانات</p></div></div>
+   <div class="grid gap-3 sm:grid-cols-2">
+    <div class="sm:col-span-2"><label class="lbl" for="fName">اسم المجلد (يظهر في الرابط)</label><input id="fName" class="inp" dir="ltr" placeholder="web1" autocapitalize="off" autocomplete="off"></div>
+    <div><label class="lbl" for="fTitle">اسم التطبيق</label><input id="fTitle" class="inp" placeholder="موقعي"></div>
+    <div><label class="lbl" for="fShort">الاسم المختصر</label><input id="fShort" class="inp" placeholder="موقعي"></div>
+    <div><label class="lbl" for="fTheme">لون الواجهة</label><input id="fTheme" type="color" value="#4f46e5" class="inp !p-1"></div>
+    <div><label class="lbl" for="fBg">لون الخلفية</label><input id="fBg" type="color" value="#ffffff" class="inp !p-1"></div>
+    <div class="sm:col-span-2">
+     <span class="lbl">الشعار (يتحول إلى logo.jpg مربع 512)</span>
+     <label class="flex min-h-[64px] cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-accent-300 bg-accent-50/60 p-3 transition hover:bg-accent-100/70 dark:border-accent-900 dark:bg-accent-950/20">
+      <img id="logoPrev" class="hidden h-12 w-12 rounded-xl object-cover" alt="">
+      <span class="material-symbols-outlined text-accent-600 dark:text-accent-400" id="logoIco">add_photo_alternate</span>
+      <span class="text-sm font-bold" id="logoTxt">اختر صورة الشعار</span>
+      <input id="fLogo" type="file" accept="image/*" class="sr-only">
+     </label>
+    </div>
+   </div>
+   <div class="mt-4 space-y-1 text-sm">
+    <label class="flex min-h-[44px] items-center gap-3"><input id="optGen" type="checkbox" checked class="h-5 w-5 accent-indigo-600"> إنشاء manifest.webmanifest و sw.js تلقائياً</label>
+    <label class="flex min-h-[44px] items-center gap-3"><input id="optInj" type="checkbox" checked class="h-5 w-5 accent-indigo-600"> حقن وسوم PWA وتسجيل العامل في الصفحة الرئيسية إن كانت ناقصة</label>
+   </div>
+  </section>
+
+  <section class="card panel" data-step="2">
+   <div class="mb-4 flex items-center gap-3"><span class="chip"><span class="material-symbols-outlined">folder_open</span></span><div><h2 class="font-extrabold">ملفات الموقع</h2><p id="filesHint" class="text-xs text-slate-500 dark:text-zinc-400"></p></div></div>
+   <div id="drop" class="rounded-xl border-2 border-dashed border-slate-300 p-5 text-center transition dark:border-zinc-700">
+    <span class="material-symbols-outlined text-accent-600 dark:text-accent-400" style="font-size:36px">cloud_upload</span>
+    <p class="mb-3 mt-1 text-sm text-slate-500 dark:text-zinc-400">اسحب الملفات هنا أو اختر</p>
+    <div class="flex flex-wrap justify-center gap-2">
+     <label class="btn-p cursor-pointer"><span class="material-symbols-outlined">folder</span>اختيار مجلد<input id="fDir" type="file" webkitdirectory multiple class="sr-only"></label>
+     <label class="btn-s cursor-pointer"><span class="material-symbols-outlined">description</span>اختيار ملفات<input id="fFiles" type="file" multiple class="sr-only"></label>
+    </div>
+   </div>
+   <ul id="fileList" class="mt-3 max-h-64 space-y-1 overflow-auto text-sm"></ul>
+   <p id="fileEmpty" class="py-3 text-center text-sm text-slate-400">لا توجد ملفات بعد</p>
+   <div id="pickBox" class="mt-3 hidden rounded-xl border border-amber-300 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/30">
+    <p class="mb-2 text-sm font-bold text-amber-800 dark:text-amber-300">لا يوجد index.html. اختر الصفحة الرئيسية:</p>
+    <div id="pickList" class="space-y-2"></div>
+   </div>
+   <label id="syncWrap" class="mt-3 hidden min-h-[44px] items-center gap-3 text-sm"><input id="optSync" type="checkbox" class="h-5 w-5 accent-indigo-600"> حذف الملفات القديمة غير الموجودة في هذا الرفع</label>
+  </section>
+
+  <section class="card panel" data-step="3">
+   <div class="mb-4 flex items-center gap-3"><span class="chip"><span class="material-symbols-outlined">rocket_launch</span></span><div><h2 class="font-extrabold">المراجعة والرفع</h2><p class="text-xs text-slate-500 dark:text-zinc-400">يُرفع كل شيء في commit واحد</p></div></div>
+   <dl id="summary" class="space-y-2 text-sm"></dl>
+   <div id="prog" class="mt-4 hidden"><div class="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-zinc-800"><div id="bar" class="h-full w-0 rounded-full bg-accent-500 transition-all duration-200"></div></div><p id="progTxt" class="mt-2 text-xs text-slate-500 dark:text-zinc-400"></p></div>
+   <div id="done" class="mt-4 hidden rounded-xl border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:border-green-900 dark:bg-green-950/30 dark:text-green-300">
+    <p class="mb-2 font-bold">تم الرفع. قد يستغرق ظهور التحديث دقيقة.</p>
+    <a id="doneLink" target="_blank" rel="noopener" dir="ltr" class="break-all font-bold underline"></a>
+   </div>
+  </section>
+
+  <div class="flex gap-2">
+   <button id="btnBack" class="btn-s hidden flex-1">رجوع</button>
+   <button id="btnNext" class="btn-p flex-[2]">التالي</button>
+  </div>
+ </section>
+</main>
+
+<div id="modal" class="mdl fixed inset-0 z-40 hidden items-end justify-center bg-black/50 backdrop-blur-sm sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+ <div class="max-h-[92vh] w-full max-w-md overflow-auto rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-zinc-900 sm:rounded-3xl" style="padding-bottom:calc(1.25rem + env(safe-area-inset-bottom))">
+  <div class="mb-4 flex items-center justify-between"><h2 id="mTitle" class="text-lg font-extrabold">إعدادات GitHub</h2><button class="ibtn mClose" aria-label="إغلاق"><span class="material-symbols-outlined">close</span></button></div>
+  <div class="space-y-3">
+   <div><label class="lbl" for="sRepo">رابط الريبو</label><input id="sRepo" class="inp" dir="ltr" placeholder="https://github.com/user/repo"></div>
+   <div class="grid grid-cols-2 gap-3">
+    <div><label class="lbl" for="sBranch">الفرع</label><input id="sBranch" class="inp" dir="ltr" placeholder="main"></div>
+    <div><label class="lbl" for="sRoot">مجلد الجذر (اختياري)</label><input id="sRoot" class="inp" dir="ltr" placeholder="docs"></div>
+   </div>
+   <div><label class="lbl" for="sToken">التوكن (Fine-grained، صلاحية Contents: write)</label>
+    <div class="relative"><input id="sToken" type="password" class="inp pe-12" dir="ltr" placeholder="github_pat_..." autocomplete="off"><button id="btnEye" type="button" class="ibtn absolute end-0 top-0" aria-label="إظهار التوكن"><span class="material-symbols-outlined">visibility</span></button></div>
+   </div>
+   <div><label class="lbl" for="sSite">رابط الموقع (اختياري، لدومين مخصص)</label><input id="sSite" class="inp" dir="ltr" placeholder="https://example.com"></div>
+   <p class="rounded-xl bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">يُحفظ التوكن في متصفحك فقط، ويشاركه كل ما على نفس الدومين، فاجعله محصوراً بهذا الريبو.</p>
+   <div class="flex gap-2"><button id="btnTest" class="btn-s flex-1">اختبار الاتصال</button><button id="btnSave" class="btn-p flex-1">حفظ</button></div>
+   <div class="flex gap-2 border-t border-slate-200 pt-3 dark:border-zinc-800">
+    <button id="btnExp" class="btn-s flex-1 !text-xs"><span class="material-symbols-outlined">download</span>تصدير الإعدادات</button>
+    <label class="btn-s flex-1 cursor-pointer !text-xs"><span class="material-symbols-outlined">upload</span>استيراد<input id="fImp" type="file" accept="application/json,.json" class="sr-only"></label>
+   </div>
+  </div>
+ </div>
+</div>
+
+<div id="cmodal" class="mdl fixed inset-0 z-40 hidden items-center justify-center bg-black/50 p-4 backdrop-blur-sm" role="alertdialog" aria-modal="true" aria-labelledby="cTitle">
+ <div class="w-full max-w-sm rounded-3xl bg-white p-5 shadow-2xl dark:bg-zinc-900">
+  <h2 id="cTitle" class="mb-2 text-lg font-extrabold text-red-600">حذف المشروع</h2>
+  <p id="cTxt" class="mb-4 text-sm text-slate-600 dark:text-zinc-300"></p>
+  <div class="flex gap-2"><button class="btn-s mClose flex-1">إلغاء</button><button id="cOk" class="btn-d flex-1">حذف</button></div>
+ </div>
+</div>
+
+<div id="toasts" class="pointer-events-none fixed inset-x-0 z-50 flex flex-col items-center gap-2 px-3" style="bottom:calc(1rem + env(safe-area-inset-bottom))"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+const APP_CONFIG={name:'ناشر المواقع',version:'2.0.0',accent:'indigo',prefix:'ghpub:'};
+$(function(){
+const store={get(k,d){try{const v=localStorage.getItem(APP_CONFIG.prefix+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(APP_CONFIG.prefix+k,JSON.stringify(v));return true}catch(e){return false}}};
+const STEPS=[{t:'الهوية',i:'badge'},{t:'الملفات',i:'folder_open'},{t:'الرفع',i:'rocket_launch'}];
+const files=new Map();let step=1,edit=null,logoFile=null,busy=false,mainPage=null,projects=[],delP=null;
+$('#appName').text(APP_CONFIG.name);
+
+function toast(msg,type){
+ const c={ok:'bg-emerald-600',err:'bg-red-600',warn:'bg-amber-500',info:'bg-slate-800 dark:bg-zinc-700'}[type||'info'];
+ const $t=$('<div class="pointer-events-auto max-w-md rounded-xl px-4 py-3 text-sm font-bold text-white shadow-lg transition duration-200 opacity-0 translate-y-2"></div>').addClass(c).text(msg);
+ $('#toasts').append($t);requestAnimationFrame(()=>$t.removeClass('opacity-0 translate-y-2'));
+ setTimeout(()=>{$t.addClass('opacity-0');setTimeout(()=>$t.remove(),250)},4000);
+}
+function theme(t,save){$('html').toggleClass('dark',t==='dark');$('#themeIcon').text(t==='dark'?'light_mode':'dark_mode');$('meta[name=theme-color]').attr('content',t==='dark'?'#09090b':'#f3f8f6');if(save)store.set('theme',t)}
+theme($('html').hasClass('dark')?'dark':'light');
+$('#btnTheme').on('click',()=>theme($('html').hasClass('dark')?'light':'dark',true));
+
+/* ---------- settings & API ---------- */
+const cfg=()=>store.get('cfg',{repo:'',branch:'main',root:'',token:'',site:''});
+const rootP=()=>cfg().root?cfg().root+'/':'';
+const brn=()=>encodeURIComponent(cfg().branch||'main').replace(/%2F/g,'/');
+function parseRepo(s){const m=String(s||'').trim().match(/(?:github\.com[\/:])?([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/);return m?{o:m[1],r:m[2]}:null}
+function siteBase(){const c=cfg(),p=parseRepo(c.repo);if(c.site)return c.site.replace(/\/+$/,'');if(!p)return '';return p.r.toLowerCase()===(p.o+'.github.io').toLowerCase()?'https://'+p.o+'.github.io':'https://'+p.o+'.github.io/'+p.r}
+async function gh(path,opt,c){
+ c=c||cfg();const p=parseRepo(c.repo);if(!p)throw new Error('رابط الريبو غير صالح');
+ const r=await fetch('https://api.github.com/repos/'+p.o+'/'+p.r+path,{method:(opt&&opt.method)||'GET',headers:{Accept:'application/vnd.github+json',Authorization:'Bearer '+c.token,'X-GitHub-Api-Version':'2022-11-28','Content-Type':'application/json'},body:opt&&opt.body?JSON.stringify(opt.body):undefined});
+ if(!r.ok){let m='';try{m=(await r.json()).message}catch(e){}throw new Error(r.status+' '+(m||r.statusText))}
+ return r.json();
+}
+async function getHead(){const r=await gh('/git/ref/heads/'+brn()),c=await gh('/git/commits/'+r.object.sha);return{sha:r.object.sha,tree:c.tree.sha}}
+const getTree=async h=>{const t=await gh('/git/trees/'+h.tree+'?recursive=1');if(t.truncated)toast('الريبو كبير جداً، قد تكون القائمة ناقصة','warn');return t.tree}
+async function commit(entries,msg,h){
+ const tr=await gh('/git/trees',{method:'POST',body:{base_tree:h.tree,tree:entries}});
+ const nc=await gh('/git/commits',{method:'POST',body:{message:msg,tree:tr.sha,parents:[h.sha]}});
+ await gh('/git/refs/heads/'+brn(),{method:'PATCH',body:{sha:nc.sha}});
+}
+const dec=s=>new TextDecoder().decode(Uint8Array.from(atob(s.replace(/\s/g,'')),c=>c.charCodeAt(0)));
+const b64=b=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=()=>rej(new Error('قراءة ملف فشلت'));r.readAsDataURL(b)});
+
+function openModal(){const c=cfg();$('#sRepo').val(c.repo);$('#sBranch').val(c.branch||'main');$('#sRoot').val(c.root);$('#sToken').val(c.token);$('#sSite').val(c.site);$('#modal').removeClass('hidden').addClass('flex');setTimeout(()=>$('#sRepo').trigger('focus'),50)}
+const closeModals=()=>$('.mdl').addClass('hidden').removeClass('flex');
+const readModal=()=>({repo:$('#sRepo').val().trim(),branch:$('#sBranch').val().trim()||'main',root:$('#sRoot').val().trim().replace(/^\/+|\/+$/g,''),token:$('#sToken').val().trim(),site:$('#sSite').val().trim()});
+$('#btnSettings').on('click',openModal);$('.mClose').on('click',closeModals);
+$('.mdl').on('click',e=>{if($(e.target).hasClass('mdl'))closeModals()});
+$(document).on('keydown',e=>{if(e.key==='Escape')closeModals()});
+$('#btnEye').on('click',function(){const h=$('#sToken').attr('type')==='password';$('#sToken').attr('type',h?'text':'password');$(this).find('span').text(h?'visibility_off':'visibility')});
+$('#btnSave').on('click',()=>{const c=readModal();if(!parseRepo(c.repo))return toast('رابط الريبو غير صالح','err');if(!c.token)return toast('أدخل التوكن','warn');store.set('cfg',c);closeModals();toast('تم حفظ الإعدادات','ok');loadProjects()});
+$('#btnTest').on('click',async function(){
+ const c=readModal();if(!parseRepo(c.repo)||!c.token)return toast('أكمل الرابط والتوكن','warn');
+ const $b=$(this).prop('disabled',true);
+ try{const r=await gh('',{},c);const ok=r.permissions&&r.permissions.push;toast(ok?'الاتصال ناجح وصلاحية الكتابة متاحة':'الاتصال ناجح لكن بدون صلاحية كتابة',ok?'ok':'warn')}
+ catch(e){toast('فشل الاتصال: '+e.message,'err')}finally{$b.prop('disabled',false)}
+});
+$('#btnExp').on('click',()=>{try{const c=cfg();delete c.token;const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({app:APP_CONFIG.name,cfg:c},null,2)],{type:'application/json'}));a.download='ghpub-settings.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),1000);toast('تم التصدير (بدون التوكن)','ok')}catch(e){toast('فشل التصدير','err')}});
+$('#fImp').on('change',async function(){const f=this.files[0];this.value='';if(!f)return;try{const d=JSON.parse(await f.text());if(!d.cfg)throw 0;const o=cfg();store.set('cfg',Object.assign({},o,d.cfg,{token:o.token}));openModal();toast('تم الاستيراد','ok')}catch(e){toast('ملف غير صالح','err')}});
+
+/* ---------- projects ---------- */
+function setState(txt,icon,spin){$('#plist').empty();$('#pcount').text('0');$('#pstate').removeClass('hidden').html('<span class="grid h-14 w-14 place-items-center rounded-full bg-accent-50 text-accent-600 dark:bg-accent-950/60 dark:text-accent-400"><span class="material-symbols-outlined'+(spin?' animate-spin':'')+'">'+icon+'</span></span><span class="max-w-xs"></span>').find('span:last').text(txt)}
+function repoLbl(){const p=parseRepo(cfg().repo);$('#repoLbl').text(p?p.o+'/'+p.r:'غير متصل')}
+async function loadProjects(){
+ const c=cfg();repoLbl();
+ if(!parseRepo(c.repo)||!c.token)return setState('أضف إعدادات GitHub لعرض مشاريعك','settings');
+ setState('جارٍ قراءة المشاريع...','progress_activity',true);
+ try{
+  const t=await getTree(await getHead()),pre=rootP();
+  const ms=t.filter(e=>e.type==='blob'&&e.path.startsWith(pre)&&/\/manifest\.webmanifest$/.test(e.path.slice(pre.length)));
+  projects=await Promise.all(ms.map(async e=>{
+   const f=e.path.slice(pre.length,-'/manifest.webmanifest'.length);let m={};
+   try{m=JSON.parse(dec((await gh('/git/blobs/'+e.sha)).content))}catch(x){}
+   return{folder:f,title:m.name||f,short:m.short_name||m.name||f,theme:m.theme_color,bg:m.background_color};
+  }));
+  projects.sort((a,b)=>a.folder.localeCompare(b.folder));renderProjects();
+ }catch(e){setState('تعذر القراءة: '+e.message,'error')}
+}
+function renderProjects(){
+ const $l=$('#plist').empty();
+ if(!projects.length)return setState('لا توجد مشاريع منشورة بعد. ابدأ بمشروع جديد','folder_off');
+ $('#pstate').addClass('hidden');$('#pcount').text(projects.length);
+ projects.forEach(p=>{
+  const url=siteBase()+'/'+p.folder+'/';
+  const $li=$('<li class="card !p-4"><div class="flex items-center gap-3"><span class="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-2xl bg-accent-50 ring-1 ring-accent-200/70 dark:bg-accent-950/50 dark:ring-accent-900"><img class="h-full w-full object-cover" alt=""><span class="material-symbols-outlined hidden text-accent-600 dark:text-accent-400">web</span></span><div class="min-w-0 flex-1"><h3 class="truncate font-extrabold"></h3><span class="mt-1 inline-block max-w-full truncate rounded-lg bg-accent-50 px-2 py-0.5 text-xs font-bold text-accent-700 dark:bg-accent-950/60 dark:text-accent-300" dir="ltr"></span></div></div><div class="mt-3 grid grid-cols-3 gap-2"><a target="_blank" rel="noopener" class="btn-t !px-2"><span class="material-symbols-outlined">open_in_new</span>فتح</a><button class="btn-s eb !px-2"><span class="material-symbols-outlined">edit</span>تعديل</button><button class="btn-x db !px-2"><span class="material-symbols-outlined">delete</span>حذف</button></div></li>');
+  $li.find('img').attr('src',url+'logo.jpg').on('error',function(){$(this).addClass('hidden').next().removeClass('hidden')});
+  $li.find('h3').text(p.title);$li.find('span[dir=ltr]').text('/'+p.folder+'/');$li.find('a').attr('href',url);
+  $li.find('.eb').on('click',()=>openWiz(p));
+  $li.find('.db').on('click',()=>{delP=p;$('#cTxt').text('سيُحذف المجلد /'+p.folder+'/ وكل ملفاته من الريبو. يبقى في سجل git فقط.');$('#cmodal').removeClass('hidden').addClass('flex')});
+  $l.append($li);
+ });
+}
+$('#cOk').on('click',async function(){
+ const p=delP;if(!p||busy)return;busy=true;const $b=$(this).prop('disabled',true);
+ try{
+  const h=await getHead(),base=rootP()+p.folder+'/';
+  const es=(await getTree(h)).filter(e=>e.type==='blob'&&e.path.startsWith(base)).map(e=>({path:e.path,mode:e.mode,type:'blob',sha:null}));
+  if(!es.length)throw new Error('لا توجد ملفات');
+  await commit(es,'Delete '+p.folder,h);toast('تم حذف '+p.folder,'ok');closeModals();projects=projects.filter(x=>x!==p);renderProjects();
+ }catch(e){toast('فشل الحذف: '+e.message,'err')}finally{busy=false;delP=null;$b.prop('disabled',false)}
+});
+$('#btnRef').on('click',loadProjects);
+$('#btnNew').on('click',()=>{const c=cfg();if(!parseRepo(c.repo)||!c.token){toast('أضف إعدادات GitHub أولاً','warn');return openModal()}openWiz(null)});
+$('#btnWBack').on('click',()=>{if(busy)return;$('#vWiz').addClass('hidden');$('#vList').removeClass('hidden')});
+
+/* ---------- wizard ---------- */
+const hex=(c,d)=>/^#[0-9a-f]{6}$/i.test(c||'')?c:d;
+function openWiz(p){
+ edit=p;files.clear();logoFile=null;mainPage=null;step=1;
+ $('#fName').val(p?p.folder:'').prop('disabled',!!p);$('#fTitle').val(p?p.title:'');$('#fShort').val(p?p.short:'');
+ $('#fTheme').val(hex(p&&p.theme,'#4f46e5'));$('#fBg').val(hex(p&&p.bg,'#ffffff'));$('#fLogo').val('');
+ if(p)$('#logoPrev').attr('src',siteBase()+'/'+p.folder+'/logo.jpg').removeClass('hidden').off('error').on('error',function(){$(this).addClass('hidden');$('#logoIco').removeClass('hidden')});else $('#logoPrev').addClass('hidden');
+ $('#logoIco').toggleClass('hidden',!!p);$('#logoTxt').text(p?'اتركه فارغاً للإبقاء على الشعار الحالي':'اختر صورة الشعار');
+ $('#wizTitle').text(p?'تعديل: '+p.folder:'مشروع جديد');
+ $('#filesHint').text(p?'الملفات المختارة تستبدل القديمة بنفس المسار':'index.html مطلوب، وما عداه اختياري');
+ $('#syncWrap').toggleClass('hidden',!p).toggleClass('flex',!!p);$('#optSync').prop('checked',false);$('#pickBox').addClass('hidden');$('#done,#prog').addClass('hidden');
+ $('#vList').addClass('hidden');$('#vWiz').removeClass('hidden');renderFiles();stepper();
+}
+function stepper(){
+ let h='';
+ STEPS.forEach((s,i)=>{const n=i+1,on=n===step,dn=n<step;
+  h+='<li class="flex flex-col items-center gap-1.5"><span class="grid h-10 w-10 place-items-center rounded-full text-sm font-extrabold transition duration-200 '+(dn?'bg-accent-600 text-white':on?'bg-accent-600 text-white ring-4 ring-accent-200 dark:ring-accent-900':'bg-slate-200 text-slate-500 dark:bg-zinc-800 dark:text-zinc-500')+'">'+(dn?'<span class="material-symbols-outlined" style="font-size:20px">check</span>':n)+'</span><span class="text-xs font-bold '+(on?'text-accent-700 dark:text-accent-400':'text-slate-500 dark:text-zinc-500')+'">'+s.t+'</span></li>';
+  if(i<STEPS.length-1)h+='<li aria-hidden="true" class="mt-[19px] h-0.5 flex-1 rounded-full transition duration-200 '+(dn?'bg-accent-500':'bg-slate-200 dark:bg-zinc-800')+'"></li>';
+ });
+ $('#stepper').html(h);
+ $('.panel').removeClass('on').filter('[data-step='+step+']').addClass('on');
+ $('#btnBack').toggleClass('hidden',step===1);
+ $('#btnNext').html(step===3?'<span class="material-symbols-outlined">rocket_launch</span>'+(edit?'تحديث الآن':'رفع الآن'):'التالي');
+}
+const validName=n=>/^[A-Za-z0-9][A-Za-z0-9_-]{0,60}$/.test(n);
+function resolveMain(){
+ if(edit||files.has('index.html'))return true;
+ const h=[...files.keys()].filter(p=>/\.html?$/i.test(p));
+ if(!h.length){toast('أضف ملف HTML واحداً على الأقل','warn');return false}
+ if(mainPage&&files.has(mainPage))return true;
+ if(h.length===1){const p=h[0];if(p.includes('/'))mainPage=p;else{files.set('index.html',files.get(p));files.delete(p);renderFiles();toast(p+' صار index.html','ok')}return true}
+ const $l=$('#pickList').empty();
+ h.forEach(p=>$('<button class="btn-s w-full !justify-start" dir="ltr"></button>').text(p).on('click',()=>{mainPage=p;$('#pickBox').addClass('hidden');go(3)}).appendTo($l));
+ $('#pickBox').removeClass('hidden');toast('اختر الصفحة الرئيسية للمتابعة','warn');return false;
+}
+function go(n){
+ if(busy)return;
+ if(n>step){
+  if(step===1){const nm=$('#fName').val().trim();
+   if(!validName(nm))return toast('اسم المجلد: حروف إنجليزية وأرقام و - _ فقط','warn');
+   if(!edit&&projects.some(p=>p.folder.toLowerCase()===nm.toLowerCase()))return toast('هذا المجلد موجود، عدّله من القائمة','warn');
+   if(!edit&&!logoFile)return toast('اختر الشعار أولاً','warn')}
+  if(step===2&&!resolveMain())return;
+ }
+ step=n;stepper();if(n===3){summary();$('#done').addClass('hidden')}
+}
+$('#btnBack').on('click',()=>go(step-1));
+$('#btnNext').on('click',()=>step===3?publish():go(step+1));
+$('#fName').on('input',function(){this.value=this.value.replace(/[^A-Za-z0-9_-]/g,'')});
+$('#fLogo').on('change',function(){const f=this.files[0];if(!f)return;logoFile=f;$('#logoPrev').attr('src',URL.createObjectURL(f)).removeClass('hidden');$('#logoIco').addClass('hidden');$('#logoTxt').text(f.name)});
+
+const fmt=n=>n>1048576?(n/1048576).toFixed(1)+' MB':Math.max(1,Math.round(n/1024))+' KB';
+function addFiles(list){
+ [...list].forEach(f=>{
+  const p=f.webkitRelativePath?f.webkitRelativePath.split('/').slice(1).join('/'):f.name;
+  if(!p||/(^|\/)(\.DS_Store|Thumbs\.db)$/.test(p)||/^\.git\//.test(p))return;
+  if(f.size>25*1048576)return toast(p+' أكبر من 25MB وتم تخطيه','warn');
+  files.set(p,f);
+ });renderFiles();
+}
+function renderFiles(){
+ if(mainPage&&!files.has(mainPage))mainPage=null;$('#pickBox').addClass('hidden');
+ const $l=$('#fileList').empty();
+ [...files].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([p,f])=>{
+  $('<li class="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-1 dark:bg-zinc-800/60"><span class="material-symbols-outlined text-slate-400" style="font-size:18px">draft</span><span class="min-w-0 flex-1 truncate" dir="ltr"></span><span class="text-xs text-slate-400"></span><button class="ibtn !h-9 !w-9" aria-label="حذف"><span class="material-symbols-outlined" style="font-size:18px">close</span></button></li>')
+  .find('span.truncate').text(p).end().find('.text-xs').text(fmt(f.size)).end().find('button').on('click',()=>{files.delete(p);renderFiles()}).end().appendTo($l);
+ });
+ $('#fileEmpty').toggle(!files.size);
+}
+$('#fDir,#fFiles').on('change',function(){addFiles(this.files);this.value=''});
+$('#drop').on('dragover',e=>{e.preventDefault();$('#drop').addClass('border-accent-500 bg-accent-50 dark:bg-accent-950/20')})
+ .on('dragleave drop',()=>$('#drop').removeClass('border-accent-500 bg-accent-50 dark:bg-accent-950/20'))
+ .on('drop',e=>{e.preventDefault();addFiles(e.originalEvent.dataTransfer.files)});
+
+function opts(){const t=$('#fTitle').val().trim()||$('#fName').val().trim();return{name:$('#fName').val().trim(),title:t,short:$('#fShort').val().trim()||t,theme:$('#fTheme').val(),bg:$('#fBg').val(),gen:$('#optGen').is(':checked'),inj:$('#optInj').is(':checked'),sync:edit&&$('#optSync').is(':checked')}}
+function summary(){
+ const o=opts(),c=cfg(),p=parseRepo(c.repo);
+ const main=files.has('index.html')?'index.html':mainPage?mainPage+' ← index.html':edit?'الحالية (دون تغيير)':'—';
+ const rows=[['العملية',edit?'تحديث مشروع (استبدال ملفات)':'مشروع جديد'],['الريبو',p?p.o+'/'+p.r+' @ '+(c.branch||'main'):'غير مضبوط'],['المجلد',rootP()+o.name+'/'],['الصفحة الرئيسية',main],['الملفات',files.size+(logoFile?' + logo.jpg':'')+(o.gen?' + PWA':'')],['الرابط',siteBase()?siteBase()+'/'+o.name+'/':'—']];
+ const $d=$('#summary').empty();
+ rows.forEach(r=>$('<div class="flex justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 dark:bg-zinc-800/60"><dt class="shrink-0 text-slate-500 dark:text-zinc-400"></dt><dd class="break-all text-start font-bold" dir="auto"></dd></div>').find('dt').text(r[0]).end().find('dd').text(r[1]).end().appendTo($d));
+}
+
+/* ---------- PWA templates ---------- */
+function logoToJpg(f){return new Promise((res,rej)=>{const img=new Image(),u=URL.createObjectURL(f);img.onload=()=>{const c=document.createElement('canvas');c.width=c.height=512;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,512,512);const s=Math.min(img.width,img.height);x.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,512,512);c.toBlob(b=>{URL.revokeObjectURL(u);b?res(b):rej(new Error('تعذر تحويل الشعار'))},'image/jpeg',.92)};img.onerror=()=>rej(new Error('تعذر قراءة الشعار'));img.src=u})}
+function manifestSrc(o){let id='/'+o.name+'/';try{id=new URL(siteBase()+'/'+o.name+'/').pathname}catch(e){}return JSON.stringify({id:id,name:o.title,short_name:o.short,start_url:'./',scope:'./',display:'standalone',background_color:o.bg,theme_color:o.theme,icons:[{src:'logo.jpg',sizes:'192x192',type:'image/jpeg',purpose:'any'},{src:'logo.jpg',sizes:'512x512',type:'image/jpeg',purpose:'any'}]},null,2)}
+function swSrc(o,v){
+ return ["const N="+JSON.stringify(o.name)+",C=N+'-'+"+JSON.stringify(v)+",SHELL=['./','./index.html','./manifest.webmanifest','./logo.jpg'];",
+ "self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>Promise.all(SHELL.map(u=>c.add(u).catch(()=>{})))))});",
+ "self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith(N+'-')&&x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});",
+ "self.addEventListener('message',e=>{if(e.data==='SKIP_WAITING')self.skipWaiting()});",
+ "self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;const u=new URL(r.url);",
+ "const shell=u.origin===location.origin&&SHELL.some(p=>new URL(p,self.registration.scope).href===u.origin+u.pathname);",
+ "if(shell){e.respondWith(caches.match(r,{ignoreSearch:true}).then(h=>h||fetch(r).then(n=>{if(n.ok){const cp=n.clone();caches.open(C).then(c=>c.put(r,cp))}return n})))}",
+ "else{e.respondWith(fetch(r).then(n=>{if(n.ok){const cp=n.clone();caches.open(C).then(c=>c.put(r,cp))}return n}).catch(()=>caches.match(r)))}});"].join('\n');
+}
+function inject(t,o,pre){
+ if(!/rel=["']manifest/i.test(t)){
+  let h='';if(!/name=["']theme-color/i.test(t))h+='<meta name="theme-color" content="'+o.theme+'">\n';
+  h+='<link rel="manifest" href="'+pre+'manifest.webmanifest">\n';
+  if(!/rel=["']apple-touch-icon/i.test(t))h+='<link rel="apple-touch-icon" href="'+pre+'logo.jpg">\n';
+  h+='<meta name="apple-mobile-web-app-capable" content="yes">\n<meta name="mobile-web-app-capable" content="yes">\n';
+  t=/<\/head>/i.test(t)?t.replace(/<\/head>/i,()=>h+'</head>'):h+t;
+ }
+ if(!/serviceWorker/i.test(t)){const s='<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("'+pre+'sw.js")<\/script>\n';t=/<\/body>/i.test(t)?t.replace(/<\/body>/i,()=>s+'</body>'):t+s}
+ return t;
+}
+const stub=(p,title)=>'<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url='+encodeURI(p)+'"><title>'+$('<i>').text(title).html()+'</title></head><body><script>location.replace("'+encodeURI(p)+'")<\/script></body></html>';
+function prog(p,t){$('#prog').removeClass('hidden');$('#bar').css('width',p+'%');$('#progTxt').text(t)}
+
+/* ---------- publish ---------- */
+async function publish(){
+ const c=cfg();if(!parseRepo(c.repo)||!c.token){toast('أكمل إعدادات GitHub أولاً','warn');return openModal()}
+ if(busy)return;busy=true;$('#btnNext,#btnBack,#btnWBack').prop('disabled',true);$('#done').addClass('hidden');
+ try{
+  const o=opts(),ver=Date.now().toString(36),out=new Map(files),base=rootP()+o.name+'/';
+  prog(3,'تجهيز الملفات...');
+  if(logoFile)out.set('logo.jpg',await logoToJpg(logoFile));
+  const entries=new Set();
+  if(!out.has('index.html')&&mainPage){
+   if(mainPage.includes('/')){out.set('index.html',new Blob([stub(mainPage,o.title)],{type:'text/html'}));entries.add(mainPage)}
+   else out.set('index.html',files.get(mainPage));
+  }
+  if(out.has('index.html'))entries.add('index.html');
+  prog(6,'قراءة الفرع...');
+  const h=await getHead(),T=edit?await getTree(h):[];
+  if(o.inj){
+   for(const k of entries){const t=await out.get(k).text(),n=inject(t,o,'../'.repeat(k.split('/').length-1));if(n!==t)out.set(k,new Blob([n],{type:'text/html'}))}
+   if(edit&&!out.has('index.html')){const e=T.find(x=>x.path===base+'index.html');if(e){const t=dec((await gh('/git/blobs/'+e.sha)).content),n=inject(t,o,'');if(n!==t)out.set('index.html',new Blob([n],{type:'text/html'}))}}
+  }
+  if(o.gen){
+   if(!out.has('manifest.webmanifest'))out.set('manifest.webmanifest',new Blob([manifestSrc(o)],{type:'application/manifest+json'}));
+   if(!out.has('sw.js'))out.set('sw.js',new Blob([swSrc(o,ver)],{type:'text/javascript'}));
+  }
+  const list=[...out],tree=[];let done=0,i=0;
+  const worker=async()=>{while(i<list.length){const [p,b]=list[i++];const bl=await gh('/git/blobs',{method:'POST',body:{content:await b64(b),encoding:'base64'}});tree.push({path:base+p,mode:'100644',type:'blob',sha:bl.sha});done++;prog(8+Math.round(done/list.length*78),'رفع '+done+' من '+list.length)}};
+  await Promise.all([worker(),worker(),worker(),worker()]);
+  if(o.sync){const keep=['logo.jpg','manifest.webmanifest','sw.js'];T.filter(e=>e.type==='blob'&&e.path.startsWith(base)&&!out.has(e.path.slice(base.length))&&!keep.includes(e.path.slice(base.length))).forEach(e=>tree.push({path:e.path,mode:e.mode,type:'blob',sha:null}))}
+  prog(92,'إنشاء commit...');
+  await commit(tree,(edit?'Update ':'Deploy ')+o.name,h);
+  prog(100,'اكتمل');
+  const url=siteBase()+'/'+o.name+'/';
+  $('#doneLink').attr('href',url).text(url);$('#done').removeClass('hidden');toast('تم الرفع بنجاح','ok');
+  const np={folder:o.name,title:o.title,short:o.short,theme:o.theme,bg:o.bg};
+  projects=projects.filter(x=>x.folder!==o.name).concat(np).sort((a,b)=>a.folder.localeCompare(b.folder));renderProjects();
+  edit=projects.find(x=>x.folder===o.name);files.clear();logoFile=null;mainPage=null;renderFiles();
+ }catch(e){$('#prog').addClass('hidden');toast('فشل الرفع: '+e.message,'err')}
+ finally{busy=false;$('#btnNext,#btnBack,#btnWBack').prop('disabled',false)}
+}
+
+stepper();repoLbl();
+if(cfg().token&&parseRepo(cfg().repo))loadProjects();else{setState('أضف إعدادات GitHub لعرض مشاريعك','settings');setTimeout(openModal,400)}
+});
+</script>
+</body>
+</html>
