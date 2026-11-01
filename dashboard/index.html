@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة المخزون المتقدم</title>
+    
+    <!-- خطوط جوجل (Cairo) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- أيقونات Material Rounded -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Cairo', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            600: '#0d9488',
+                            900: '#134e4a',
+                            950: '#042f2e',
+                        },
+                        dark: {
+                            800: '#1e293b',
+                            900: '#0f172a',
+                        }
+                    },
+                    boxShadow: {
+                        'glass': '0 4px 30px rgba(0, 0, 0, 0.1)',
+                        'soft': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- Dexie.js (IndexedDB) -->
+    <script src="https://unpkg.com/dexie/dist/dexie.js"></script>
+
+    <style>
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background-color: #f8fafc;
+        }
+        
+        /* شريط التمرير المخصص */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .view-section { display: none; animation: fadeIn 0.4s ease-out; }
+        .view-section.active { display: block; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* تنسيقات الطباعة */
+        @media print {
+            @page { margin: 1cm; size: A4 portrait; }
+            body { background: white !important; }
+            .print-hidden { display: none !important; }
+            .print-only { display: block !important; }
+            .print-container { padding: 0 !important; width: 100% !important; max-width: 100% !important; box-shadow: none !important; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th, td { border: 1px solid #e2e8f0; padding: 12px 8px; text-align: right; color: black; }
+            th { background-color: #f1f5f9 !important; font-weight: bold; }
+        }
+    </style>
+<meta name="theme-color" content="#4f46e5">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="logo.jpg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body class="text-slate-800 h-screen flex overflow-hidden selection:bg-brand-500 selection:text-white">
+
+    <!-- القائمة الجانبية -->
+    <aside id="sidebar" class="print-hidden bg-dark-900 text-slate-300 w-72 flex-shrink-0 hidden md:flex flex-col transition-all duration-300 absolute md:relative z-30 h-full shadow-2xl">
+        <div class="p-6 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-brand-500 to-teal-400 flex items-center justify-center text-white shadow-lg shadow-brand-500/30">
+                    <span class="material-icons-round">inventory_2</span>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-white leading-tight">إنفينتوري</h1>
+                    <span class="text-xs text-brand-500 font-medium">نظام الإدارة الذكي</span>
+                </div>
+            </div>
+            <button id="close-sidebar" class="md:hidden text-slate-400 hover:text-white transition-colors">
+                <span class="material-icons-round">close</span>
+            </button>
+        </div>
+
+        <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <p class="px-4 text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wider">القائمة الرئيسية</p>
+            
+            <a href="#" data-target="dashboard" class="nav-link active group flex items-center gap-3 px-4 py-3.5 rounded-xl bg-brand-500/10 text-brand-500 font-semibold transition-all">
+                <span class="material-icons-round transition-transform group-hover:scale-110">space_dashboard</span>
+                لوحة القيادة
+            </a>
+            
+            <a href="#" data-target="products" class="nav-link group flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white font-medium transition-all">
+                <span class="material-icons-round transition-transform group-hover:scale-110">category</span>
+                المنتجات والمخزون
+            </a>
+
+            <div class="my-6 border-t border-slate-800"></div>
+            
+            <button onclick="printReport()" class="w-full group flex items-center gap-3 px-4 py-3.5 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white font-medium transition-all text-right">
+                <span class="material-icons-round transition-transform group-hover:scale-110">print</span>
+                طباعة تقرير شامل
+            </button>
+        </nav>
+
+        <div class="p-4 m-4 rounded-xl bg-slate-800/50 border border-slate-700/50 backdrop-blur-sm flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-slate-300">
+                <span class="material-icons-round">person</span>
+            </div>
+            <div>
+                <p class="text-sm font-bold text-white">المدير العام</p>
+                <p class="text-xs text-slate-400">admin@inventory.com</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- غطاء الشاشة للهواتف -->
+    <div id="sidebar-overlay" class="print-hidden fixed inset-0 bg-dark-900/80 backdrop-blur-sm z-20 hidden md:hidden transition-opacity"></div>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="flex-1 flex flex-col h-full w-full overflow-hidden bg-slate-50 print-container">
+        <!-- شريط علوي -->
+        <header class="print-hidden bg-white/80 backdrop-blur-md border-b border-slate-200 h-20 flex items-center justify-between px-6 lg:px-10 z-10 flex-shrink-0">
+            <div class="flex items-center gap-4">
+                <button id="open-sidebar" class="md:hidden text-slate-600 focus:outline-none hover:bg-slate-100 p-2 rounded-lg transition-colors">
+                    <span class="material-icons-round text-2xl">menu_open</span>
+                </button>
+                <h2 class="font-bold text-2xl text-slate-800 hidden md:block" id="page-title">لوحة القيادة</h2>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div class="hidden md:flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-lg text-sm text-slate-600 font-medium">
+                    <span class="material-icons-round text-slate-400 text-lg">calendar_today</span>
+                    <span id="current-date"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ترويسة الطباعة (تظهر فقط عند الطباعة) -->
+        <div class="hidden print-only text-center mb-8 border-b-2 border-slate-800 pb-4">
+            <h1 class="text-3xl font-bold mb-2">تقرير المخزون الشامل</h1>
+            <p class="text-gray-600" id="print-date"></p>
+        </div>
+
+        <!-- منطقة العرض (Views) -->
+        <div class="flex-1 overflow-auto p-6 lg:p-10 print-container">
+            
+            <!-- رسالة الإشعارات -->
+            <div id="toast" class="fixed bottom-10 left-10 transform translate-y-10 opacity-0 bg-dark-900 text-white px-6 py-4 rounded-2xl shadow-2xl z-50 flex items-center gap-3 transition-all duration-300">
+                <span id="toast-icon" class="material-icons-round text-brand-400">check_circle</span>
+                <span id="toast-msg" class="font-medium">تمت العملية بنجاح</span>
+            </div>
+
+            <!-- 1. لوحة القيادة -->
+            <section id="dashboard" class="view-section active print-hidden">
+                <!-- البطاقات الإحصائية -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                    <!-- بطاقة 1 -->
+                    <div class="bg-white rounded-3xl p-6 shadow-soft border border-slate-100 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-slate-500 text-sm font-semibold mb-1">إجمالي المنتجات</p>
+                                <h3 class="text-4xl font-bold text-slate-800" id="stat-total-products">0</h3>
+                            </div>
+                            <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-inner">
+                                <span class="material-icons-round text-3xl">inventory</span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-blue-600 font-medium flex items-center gap-1 mt-4 bg-blue-50/50 w-fit px-3 py-1 rounded-lg">
+                            <span class="material-icons-round text-sm">trending_up</span>
+                            يتم تحديثه باستمرار
+                        </div>
+                    </div>
+                    
+                    <!-- بطاقة 2 -->
+                    <div class="bg-white rounded-3xl p-6 shadow-soft border border-slate-100 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-slate-500 text-sm font-semibold mb-1">القيمة الإجمالية</p>
+                                <h3 class="text-4xl font-bold text-slate-800" id="stat-total-value">0 $</h3>
+                            </div>
+                            <div class="w-14 h-14 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center shadow-inner">
+                                <span class="material-icons-round text-3xl">account_balance_wallet</span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-brand-600 font-medium flex items-center gap-1 mt-4 bg-brand-50/50 w-fit px-3 py-1 rounded-lg">
+                            <span class="material-icons-round text-sm">calculate</span>
+                            قيمة جميع المنتجات
+                        </div>
+                    </div>
+
+                    <!-- بطاقة 3 -->
+                    <div class="bg-white rounded-3xl p-6 shadow-soft border border-slate-100 relative overflow-hidden group hover:shadow-lg transition-all duration-300">
+                        <div class="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 rounded-bl-full -z-10 group-hover:scale-110 transition-transform"></div>
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-slate-500 text-sm font-semibold mb-1">تنبيهات المخزون</p>
+                                <h3 class="text-4xl font-bold text-slate-800" id="stat-low-stock">0</h3>
+                            </div>
+                            <div class="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shadow-inner">
+                                <span class="material-icons-round text-3xl">notification_important</span>
+                            </div>
+                        </div>
+                        <div class="text-sm text-rose-500 font-medium flex items-center gap-1 mt-4 bg-rose-50/50 w-fit px-3 py-1 rounded-lg">
+                            <span class="material-icons-round text-sm">warning</span>
+                            منتجات قاربت على النفاد (≤ 5)
+                        </div>
+                    </div>
+                </div>
+
+                <!-- أحدث المنتجات -->
+                <div class="bg-white rounded-3xl shadow-soft border border-slate-100 p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                            <span class="material-icons-round text-brand-500">history</span>
+                            أحدث المنتجات المضافة
+                        </h3>
+                        <button onclick="$('.nav-link[data-target=\'products\']').click()" class="text-brand-600 hover:text-brand-700 font-semibold text-sm flex items-center gap-1">
+                            عرض الكل
+                            <span class="material-icons-round text-sm">arrow_back</span>
+                        </button>
+                    </div>
+                    
+                    <div class="overflow-x-auto rounded-xl">
+                        <table class="w-full text-right border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-sm">
+                                    <th class="py-4 px-4 font-semibold rounded-tr-xl">المنتج</th>
+                                    <th class="py-4 px-4 font-semibold">التصنيف</th>
+                                    <th class="py-4 px-4 font-semibold">السعر</th>
+                                    <th class="py-4 px-4 font-semibold rounded-tl-xl">الكمية المتوفرة</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-products-table" class="text-sm divide-y divide-slate-100">
+                                <!-- يتم الملء بواسطة jQuery -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. صفحة المنتجات (والمخصصة للطباعة أيضاً) -->
+            <section id="products" class="view-section">
+                
+                <!-- أدوات التحكم (مخفية في الطباعة) -->
+                <div class="print-hidden bg-white p-4 rounded-2xl shadow-soft border border-slate-100 mb-8 flex flex-col lg:flex-row items-center justify-between gap-4">
+                    <div class="flex-1 w-full lg:w-auto relative">
+                        <span class="material-icons-round absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400">search</span>
+                        <input type="text" id="search-input" placeholder="ابحث عن منتج بالاسم، الكود، أو التصنيف..." class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pr-12 pl-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:bg-white transition-all">
+                    </div>
+                    <div class="flex items-center gap-3 w-full lg:w-auto">
+                        <button onclick="printReport()" class="flex-1 lg:flex-none bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors">
+                            <span class="material-icons-round">print</span>
+                            <span class="hidden sm:inline">طباعة</span>
+                        </button>
+                        <button onclick="openModal()" class="flex-1 lg:flex-none bg-brand-600 hover:bg-brand-700 text-white px-6 py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 shadow-lg shadow-brand-500/30 transition-all hover:shadow-brand-500/50 hover:-translate-y-0.5">
+                            <span class="material-icons-round">add</span>
+                            إضافة منتج
+                        </button>
+                    </div>
+                </div>
+
+                <!-- جدول المنتجات الرئيسي -->
+                <div class="bg-white rounded-3xl shadow-soft border border-slate-100 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-right border-collapse whitespace-nowrap" id="main-products-table">
+                            <thead class="bg-slate-50/80 text-slate-600 text-sm backdrop-blur-sm sticky top-0">
+                                <tr>
+                                    <th class="p-5 font-bold border-b border-slate-200">رمز SKU</th>
+                                    <th class="p-5 font-bold border-b border-slate-200">اسم المنتج</th>
+                                    <th class="p-5 font-bold border-b border-slate-200">التصنيف</th>
+                                    <th class="p-5 font-bold border-b border-slate-200">السعر</th>
+                                    <th class="p-5 font-bold border-b border-slate-200">الكمية</th>
+                                    <th class="p-5 font-bold border-b border-slate-200 print-hidden">الحالة</th>
+                                    <th class="p-5 font-bold border-b border-slate-200 text-center print-hidden">إجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table" class="text-sm divide-y divide-slate-100">
+                                <!-- يتم الملء بواسطة jQuery -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- حالة فارغة -->
+                    <div id="no-data-msg" class="text-center py-16 hidden print-hidden">
+                        <div class="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <span class="material-icons-round text-5xl text-slate-300">inventory_2</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-slate-700 mb-2">لا توجد منتجات</h4>
+                        <p class="text-slate-500 max-w-sm mx-auto">لم يتم العثور على أي منتجات مطابقة لبحثك، أو لم تقم بإضافة منتجات بعد.</p>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- نافذة منبثقة (Modal) لإضافة/تعديل منتج -->
+    <div id="product-modal" class="fixed inset-0 bg-dark-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 print-hidden transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden transform scale-95 transition-all duration-300" id="modal-content">
+            
+            <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-brand-100 text-brand-600 rounded-xl flex items-center justify-center">
+                        <span class="material-icons-round" id="modal-icon">add_circle</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800" id="modal-title">إضافة منتج جديد</h3>
+                </div>
+                <button type="button" onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:bg-slate-200 hover:text-slate-600 transition-colors">
+                    <span class="material-icons-round">close</span>
+                </button>
+            </div>
+            
+            <form id="product-form" class="p-8">
+                <input type="hidden" id="product-id">
+                
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-slate-700 mb-2">اسم المنتج <span class="text-rose-500">*</span></label>
+                    <input type="text" id="p-name" required placeholder="مثال: لابتوب ديل XPS" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all font-medium text-slate-800">
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">كود المنتج (SKU) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="p-sku" required placeholder="مثال: PRD-001" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all font-mono text-slate-800 uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">التصنيف</label>
+                        <div class="relative">
+                            <select id="p-category" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 appearance-none focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all font-medium text-slate-800">
+                                <option value="إلكترونيات">إلكترونيات</option>
+                                <option value="ملابس وموضة">ملابس وموضة</option>
+                                <option value="مواد غذائية">مواد غذائية</option>
+                                <option value="أثاث وديكور">أثاث وديكور</option>
+                                <option value="قرطاسية">قرطاسية</option>
+                                <option value="أخرى">أخرى</option>
+                            </select>
+                            <span class="material-icons-round absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">السعر ($) <span class="text-rose-500">*</span></label>
+                        <input type="number" id="p-price" step="0.01" min="0" required placeholder="0.00" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all font-medium text-slate-800">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-2">الكمية المتوفرة <span class="text-rose-500">*</span></label>
+                        <input type="number" id="p-quantity" min="0" required placeholder="0" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3.5 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all font-medium text-slate-800">
+                    </div>
+                </div>
+
+                <div class="flex gap-3 justify-end pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeModal()" class="px-6 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors">إلغاء</button>
+                    <button type="submit" class="px-8 py-3 bg-brand-600 text-white font-bold rounded-xl hover:bg-brand-700 transition-colors shadow-lg shadow-brand-500/30 flex items-center gap-2">
+                        <span class="material-icons-round text-lg">save</span>
+                        حفظ البيانات
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- نافذة التأكيد للحذف -->
+    <div id="confirm-modal" class="fixed inset-0 bg-dark-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 print-hidden transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-8 text-center transform scale-95 transition-all duration-300" id="confirm-content">
+            <div class="w-20 h-20 bg-rose-50 border-[6px] border-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-5">
+                <span class="material-icons-round text-4xl">delete_forever</span>
+            </div>
+            <h3 class="text-2xl font-bold text-slate-800 mb-3">تأكيد الحذف</h3>
+            <p class="text-slate-500 mb-8 font-medium">هل أنت متأكد من رغبتك في حذف هذا المنتج نهائياً؟ لا يمكن التراجع عن هذا الإجراء.</p>
+            <div class="flex gap-3 justify-center">
+                <button type="button" onclick="closeConfirmModal()" class="px-5 py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-slate-200 transition-colors flex-1">إلغاء</button>
+                <button type="button" id="confirm-delete-btn" class="px-5 py-3 bg-rose-500 text-white font-bold rounded-xl hover:bg-rose-600 shadow-lg shadow-rose-500/30 transition-colors flex-1">نعم، احذف</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // إعداد التاريخ الحالي في الترويسة
+        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        $('#current-date, #print-date').text(new Date().toLocaleDateString('ar-EG', dateOptions));
+
+        // 1. تهيئة قاعدة البيانات Dexie.js
+        const db = new Dexie("InventoryProDB");
+        db.version(1).stores({
+            products: '++id, name, sku, category, price, quantity'
+        });
+
+        // بيانات وهمية (Seed Data)
+        const initialDataJSON = `[
+            {"name": "حاسوب محمول أبل ماك بوك برو M2", "sku": "MAC-PRO-01", "category": "إلكترونيات", "price": 1499.00, "quantity": 15},
+            {"name": "هاتف سامسونج جالاكسي S23", "sku": "SAM-S23-00", "category": "إلكترونيات", "price": 899.99, "quantity": 4},
+            {"name": "كرسي مكتب طبي مريح", "sku": "FUR-CHR-99", "category": "أثاث وديكور", "price": 250.00, "quantity": 22},
+            {"name": "شاشة إل جي الترا وايد 34 بوصة", "sku": "SCR-LG-340", "category": "إلكترونيات", "price": 450.00, "quantity": 3},
+            {"name": "طاولة اجتماعات خشب بلوط", "sku": "FUR-TBL-05", "category": "أثاث وديكور", "price": 800.00, "quantity": 2},
+            {"name": "سماعات سوني عازلة للضوضاء", "sku": "AUD-SON-X4", "category": "إلكترونيات", "price": 349.50, "quantity": 40}
+        ]`;
+
+        let deleteTargetId = null;
+
+        // عند تحميل الصفحة
+        $(document).ready(async function() {
+            // التحقق وحقن البيانات الأولية
+            const count = await db.products.count();
+            if (count === 0) {
+                const seedData = JSON.parse(initialDataJSON);
+                await db.products.bulkAdd(seedData);
+            }
+
+            refreshData();
+
+            // التنقل بين الصفحات مع الحركات
+            $('.nav-link').click(function(e) {
+                e.preventDefault();
+                
+                // تحديث القائمة الجانبية
+                $('.nav-link').removeClass('active bg-brand-500/10 text-brand-500').addClass('hover:bg-slate-800 text-slate-400 hover:text-white');
+                $(this).removeClass('hover:bg-slate-800 text-slate-400 hover:text-white').addClass('active bg-brand-500/10 text-brand-500');
+                
+                // إظهار القسم المطلوب
+                const target = $(this).data('target');
+                $('.view-section').removeClass('active');
+                
+                // إضافة تأخير بسيط لتأثير الحركة
+                setTimeout(() => {
+                    $('#' + target).addClass('active');
+                }, 50);
+
+                $('#page-title').text($(this).text().trim());
+
+                if ($(window).width() < 768) toggleSidebar(false);
+                
+                refreshData();
+            });
+
+            // التحكم بالقائمة الجانبية للموبايل
+            $('#open-sidebar').click(() => toggleSidebar(true));
+            $('#close-sidebar, #sidebar-overlay').click(() => toggleSidebar(false));
+
+            // معالجة نموذج إضافة/تعديل المنتج
+            $('#product-form').submit(async function(e) {
+                e.preventDefault();
+                
+                const productData = {
+                    name: $('#p-name').val(),
+                    sku: $('#p-sku').val().toUpperCase(),
+                    category: $('#p-category').val(),
+                    price: parseFloat($('#p-price').val()),
+                    quantity: parseInt($('#p-quantity').val())
+                };
+
+                const id = $('#product-id').val();
+
+                try {
+                    if (id) {
+                        await db.products.update(parseInt(id), productData);
+                        showToast("تم تحديث بيانات المنتج بنجاح", "success");
+                    } else {
+                        await db.products.add(productData);
+                        showToast("تمت إضافة المنتج الجديد بنجاح", "success");
+                    }
+                    closeModal();
+                    refreshData();
+                } catch (err) {
+                    showToast("حدث خطأ أثناء الحفظ", "error");
+                }
+            });
+
+            // زر الحذف في نافذة التأكيد
+            $('#confirm-delete-btn').click(async function() {
+                if (deleteTargetId) {
+                    await db.products.delete(deleteTargetId);
+                    closeConfirmModal();
+                    showToast("تم حذف المنتج من السجلات", "success");
+                    refreshData();
+                    deleteTargetId = null;
+                }
+            });
+
+            // ميزة البحث الفوري المتطورة
+            $('#search-input').on('input', function() {
+                const term = $(this).val().toLowerCase();
+                if (term) {
+                    db.products.filter(product => {
+                        return product.name.toLowerCase().includes(term) || 
+                               product.sku.toLowerCase().includes(term) ||
+                               product.category.toLowerCase().includes(term);
+                    }).toArray().then(renderProductsTable);
+                } else {
+                    refreshData();
+                }
+            });
+        });
+
+        // تنسيق العملة
+        const formatCurrency = (number) => {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(number);
+        };
+
+        // تحديث البيانات
+        async function refreshData() {
+            const allProducts = await db.products.toArray();
+            renderDashboard(allProducts);
+            renderProductsTable(allProducts);
+        }
+
+        // بناء لوحة القيادة
+        function renderDashboard(products) {
+            let totalValue = 0;
+            let lowStockCount = 0;
+
+            products.forEach(p => {
+                totalValue += (p.price * p.quantity);
+                if (p.quantity <= 5) lowStockCount++;
+            });
+
+            // أنيميشن للأرقام (بسيط)
+            $('#stat-total-products').text(products.length);
+            $('#stat-total-value').text(formatCurrency(totalValue));
+            $('#stat-low-stock').text(lowStockCount);
+
+            // أحدث 5 منتجات
+            const recent = products.slice(-5).reverse();
+            let html = '';
+            recent.forEach(p => {
+                const stockBadge = p.quantity <= 5 
+                    ? `<span class="bg-rose-100 text-rose-700 px-2.5 py-1 rounded-md text-xs font-bold">${p.quantity}</span>`
+                    : `<span class="text-slate-600 font-semibold">${p.quantity}</span>`;
+                    
+                html += `
+                    <tr class="hover:bg-slate-50 transition-colors group">
+                        <td class="py-4 px-4 font-semibold text-slate-800">${p.name} <br> <span class="text-xs text-slate-400 font-mono font-normal">${p.sku}</span></td>
+                        <td class="py-4 px-4"><span class="bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1 rounded-lg text-xs font-medium">${p.category}</span></td>
+                        <td class="py-4 px-4 font-bold text-slate-700">${formatCurrency(p.price)}</td>
+                        <td class="py-4 px-4">${stockBadge}</td>
+                    </tr>
+                `;
+            });
+            $('#recent-products-table').html(html || '<tr><td colspan="4" class="text-center py-8 text-slate-500 font-medium">لا توجد بيانات متاحة حالياً</td></tr>');
+        }
+
+        // بناء جدول المنتجات
+        function renderProductsTable(products) {
+            let html = '';
+            
+            if (products.length === 0) {
+                $('#products-table').empty();
+                $('#no-data-msg').removeClass('hidden');
+                return;
+            }
+            
+            $('#no-data-msg').addClass('hidden');
+
+            products.reverse().forEach(p => {
+                let statusBadge = '';
+                if (p.quantity === 0) {
+                    statusBadge = '<div class="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-200 text-rose-700 px-3 py-1.5 rounded-xl text-xs font-bold"><span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>نفد المخزون</div>';
+                } else if (p.quantity <= 5) {
+                    statusBadge = '<div class="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1.5 rounded-xl text-xs font-bold"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>قارب للنفاد</div>';
+                } else {
+                    statusBadge = '<div class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-xl text-xs font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>متوفر</div>';
+                }
+
+                html += `
+                    <tr class="hover:bg-brand-50/50 transition-colors group">
+                        <td class="p-5 font-mono text-slate-500 text-sm">${p.sku}</td>
+                        <td class="p-5 font-bold text-slate-800">${p.name}</td>
+                        <td class="p-5"><span class="bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-lg text-xs font-medium shadow-sm">${p.category}</span></td>
+                        <td class="p-5 font-extrabold text-slate-700">${formatCurrency(p.price)}</td>
+                        <td class="p-5 font-semibold text-slate-800 text-center">${p.quantity}</td>
+                        <td class="p-5 print-hidden">${statusBadge}</td>
+                        <td class="p-5 text-center print-hidden">
+                            <div class="flex items-center justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                <button onclick="editProduct(${p.id})" class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all shadow-sm hover:shadow-md" title="تعديل">
+                                    <span class="material-icons-round text-sm">edit</span>
+                                </button>
+                                <button onclick="confirmDelete(${p.id})" class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white flex items-center justify-center transition-all shadow-sm hover:shadow-md" title="حذف">
+                                    <span class="material-icons-round text-sm">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            $('#products-table').html(html);
+        }
+
+        // دالة الطباعة (Print Report)
+        function printReport() {
+            // الانتقال لصفحة المنتجات إذا لم يكن المستخدم عليها
+            if (!$('#products').hasClass('active')) {
+                $('.nav-link[data-target="products"]').click();
+                setTimeout(() => {
+                    window.print();
+                }, 300); // ننتظر قليلاً ليتم تفعيل القسم
+            } else {
+                window.print();
+            }
+        }
+
+        // النوافذ المنبثقة (Modals) مع تأثيرات الانبثاق
+        function openModal() {
+            $('#product-form')[0].reset();
+            $('#product-id').val('');
+            $('#modal-title').text('إضافة منتج جديد');
+            $('#modal-icon').text('add_circle');
+            
+            const modal = $('#product-modal');
+            modal.removeClass('hidden').addClass('flex');
+            // تأخير بسيط للسماح بتطبيق الكلاس flex قبل تغيير الشفافية
+            setTimeout(() => {
+                modal.removeClass('opacity-0');
+                $('#modal-content').removeClass('scale-95').addClass('scale-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = $('#product-modal');
+            modal.addClass('opacity-0');
+            $('#modal-content').removeClass('scale-100').addClass('scale-95');
+            setTimeout(() => {
+                modal.addClass('hidden').removeClass('flex');
+            }, 300);
+        }
+
+        async function editProduct(id) {
+            const product = await db.products.get(id);
+            if (product) {
+                $('#product-id').val(product.id);
+                $('#p-name').val(product.name);
+                $('#p-sku').val(product.sku);
+                $('#p-category').val(product.category);
+                $('#p-price').val(product.price);
+                $('#p-quantity').val(product.quantity);
+                
+                $('#modal-title').text('تعديل بيانات المنتج');
+                $('#modal-icon').text('edit_note');
+                
+                const modal = $('#product-modal');
+                modal.removeClass('hidden').addClass('flex');
+                setTimeout(() => {
+                    modal.removeClass('opacity-0');
+                    $('#modal-content').removeClass('scale-95').addClass('scale-100');
+                }, 10);
+            }
+        }
+
+        function confirmDelete(id) {
+            deleteTargetId = id;
+            const modal = $('#confirm-modal');
+            modal.removeClass('hidden').addClass('flex');
+            setTimeout(() => {
+                modal.removeClass('opacity-0');
+                $('#confirm-content').removeClass('scale-95').addClass('scale-100');
+            }, 10);
+        }
+
+        function closeConfirmModal() {
+            const modal = $('#confirm-modal');
+            modal.addClass('opacity-0');
+            $('#confirm-content').removeClass('scale-100').addClass('scale-95');
+            setTimeout(() => {
+                modal.addClass('hidden').removeClass('flex');
+            }, 300);
+        }
+
+        function toggleSidebar(show) {
+            if (show) {
+                $('#sidebar').removeClass('hidden').addClass('flex');
+                $('#sidebar-overlay').removeClass('hidden');
+                setTimeout(() => $('#sidebar-overlay').addClass('opacity-100'), 10);
+            } else {
+                $('#sidebar-overlay').removeClass('opacity-100');
+                setTimeout(() => {
+                    $('#sidebar').addClass('hidden').removeClass('flex');
+                    $('#sidebar-overlay').addClass('hidden');
+                }, 300);
+            }
+        }
+
+        // إشعارات احترافية (Toast)
+        let toastTimeout;
+        function showToast(message, type = 'success') {
+            const toast = $('#toast');
+            $('#toast-msg').text(message);
+            
+            clearTimeout(toastTimeout);
+            
+            if (type === 'error') {
+                toast.removeClass('bg-dark-900').addClass('bg-rose-600');
+                $('#toast-icon').text('error_outline').removeClass('text-brand-400').addClass('text-white');
+            } else {
+                toast.removeClass('bg-rose-600').addClass('bg-dark-900');
+                $('#toast-icon').text('check_circle').removeClass('text-white').addClass('text-brand-400');
+            }
+
+            toast.removeClass('translate-y-10 opacity-0').addClass('translate-y-0 opacity-100');
+            
+            toastTimeout = setTimeout(() => {
+                toast.removeClass('translate-y-0 opacity-100').addClass('translate-y-10 opacity-0');
+            }, 3500);
+        }
+    </script>
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")</script>
+</body>
+</html>
+
+
+
