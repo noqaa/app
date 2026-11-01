@@ -1,5 +1,5 @@
 {
   "tailwind": true,
-  "assets": false,
-  "scripts": false 
+  "assets": true,
+  "scripts": true 
 }
