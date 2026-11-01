@@ -1,4 +1,4 @@
-const N="dash",C=N+'-'+"mvxx7ecv",SHELL=['./','./index.html','./manifest.webmanifest','./logo.jpg'];
+const N="dash",C=N+'-'+"mvy79g4k",SHELL=["./","./index.html","./manifest.webmanifest","./logo.jpg","./output.css"];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>Promise.all(SHELL.map(u=>c.add(u).catch(()=>{})))))});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x.startsWith(N+'-')&&x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
 self.addEventListener('message',e=>{if(e.data==='SKIP_WAITING')self.skipWaiting()});

@@ -1,0 +1,36 @@
+{
+ "major": 3,
+ "ver": "",
+ "plugins": [],
+ "config": {
+  "theme": {
+   "extend": {
+    "fontFamily": {
+     "sans": [
+      "Cairo",
+      "sans-serif"
+     ]
+    },
+    "colors": {
+     "brand": {
+      "50": "#f0fdfa",
+      "100": "#ccfbf1",
+      "500": "#14b8a6",
+      "600": "#0d9488",
+      "900": "#134e4a",
+      "950": "#042f2e"
+     },
+     "dark": {
+      "800": "#1e293b",
+      "900": "#0f172a"
+     }
+    },
+    "boxShadow": {
+     "glass": "0 4px 30px rgba(0, 0, 0, 0.1)",
+     "soft": "0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01)"
+    }
+   }
+  }
+ },
+ "css": []
+}
