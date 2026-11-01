@@ -65,8 +65,13 @@ const setAttr = (tag, n, v) => tag.replace(new RegExp(`(\\s${n}\\s*=\\s*)(?:"[^"
 const delAttr = (tag, n) => tag.replace(new RegExp(`\\s${n}(?=[\\s>/=]|$)(?:\\s*=\\s*(?:"[^"]*"|'[^']*'|[^\\s"'>]+))?`, 'ig'), '');
 const unesc = (v) => v.replace(/&amp;/g, '&');
 const openOf = (m) => m.match(new RegExp(`^<[\\w-]+\\b${TAG}>`))[0];
-const relUrl = (fromDir, rel) => posix(path.relative(fromDir, path.join(DIR, rel)));
-
+const relUrl = (fromDir, rel) => {
+  let p = posix(path.relative(fromDir, path.join(DIR, rel)));
+  if (!p.startsWith('../') && !p.startsWith('./')) {
+    p = './' + p;
+  }
+  return p;
+};
 /* ---------- which URLs may be localized (APIs, trackers, payment/captcha/map SDKs and anything with keys are never touched) ---------- */
 const OWNER = (process.env.GITHUB_REPOSITORY_OWNER || '').toLowerCase();
 const PRIVATE = /^(localhost|0\.0\.0\.0|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?$|.*\.local$|.*\.internal$)/i;
