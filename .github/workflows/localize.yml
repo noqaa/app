@@ -1,0 +1,58 @@
+name: Auto Localize Static Sites
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      directories: ${{ steps.set-matrix.outputs.dirs }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find projects with .localize.json
+        id: set-matrix
+        run: |
+          # البحث تلقائياً عن كل المجلدات التي تحتوي على ملف .localize.json وتحويلها إلى مصفوفة JSON
+          DIRS=$(find . -name ".localize.json" -exec dirname {} \; | sed 's|^\./||' | jq -R -s -c 'split("\n")[:-1]')
+          echo "Found directories: $DIRS"
+          echo "dirs=$DIRS" >> $GITHUB_OUTPUT
+
+  localize:
+    needs: discover
+    runs-on: ubuntu-latest
+    # لا تقم بتشغيل الـ Job إذا لم يتم العثور على أي مجلد يحتوي على ملف التكوين
+    if: ${{ needs.discover.outputs.directories != '[]' && needs.discover.outputs.directories != '' }}
+    
+    permissions:
+      contents: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJson(needs.discover.outputs.directories) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Localize Script for ${{ matrix.dir }}
+        env:
+          DIR: ${{ matrix.dir }}
+        # مسار السكربت الخاص بك بناءً على ما ذكرته (noqaa/app/.github/scripts/localize.mjs)
+        run: node noqaa/app/.github/scripts/localize.mjs
+
+      - name: Commit and Push changes if any
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore(localize): update local assets and styles for ${{ matrix.dir }}"
+          file_pattern: "${{ matrix.dir }}/*"
