@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مراقب النانو</title>
+<meta name="description" content="لوحة مبسّطة لمراقبة إشارة وجودة ارتباط أجهزة Ubiquiti airOS">
+<meta name="theme-color" content="#eef2ff">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Nano Monitor">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="logo.jpg">
+<link rel="apple-touch-icon" href="logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0&display=block" rel="stylesheet">
+<script>
+const APP_CONFIG = {
+  name: 'مراقب النانو',
+  shortName: 'Nano Monitor',
+  version: '1.0.0',
+  accent: 'indigo',
+  accentScale: { 50:'#eef2ff',100:'#e0e7ff',200:'#c7d2fe',300:'#a5b4fc',400:'#818cf8',500:'#6366f1',600:'#4f46e5',700:'#4338ca',800:'#3730a3',900:'#312e81',950:'#1e1b4b' },
+  themeColors: { light: '#eef2ff', dark: '#09090b' },
+  storagePrefix: 'nanomon:',
+  historyLimit: 120,
+  defaults: { mode: 'demo', url: 'http://192.168.1.20/status.cgi', interval: 3, authHeader: '', authValue: '', credentials: false, manualJson: '' }
+};
+(function () {
+  try {
+    var t = JSON.parse(localStorage.getItem(APP_CONFIG.storagePrefix + 'theme'));
+    var dark = t ? t === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.classList.toggle('dark', dark);
+    document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? APP_CONFIG.themeColors.dark : APP_CONFIG.themeColors.light);
+  } catch (e) {}
+})();
+</script>
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+tailwind.config = {
+  darkMode: 'class',
+  theme: { extend: { colors: { accent: APP_CONFIG.accentScale }, fontFamily: { sans: ['Tajawal', 'system-ui', 'sans-serif'] } } }
+};
+</script>
+<style>
+  :root { --r-strong: 5 150 105; --r-good: 217 119 6; --r-weak: 220 38 38; }
+  .dark { --r-strong: 52 211 153; --r-good: 251 191 36; --r-weak: 248 113 113; }
+  .r-strong { --c: var(--r-strong); }
+  .r-good { --c: var(--r-good); }
+  .r-weak { --c: var(--r-weak); }
+  .rchip { background: rgb(var(--c) / .14); color: rgb(var(--c)); }
+  .rtip { background: rgb(var(--c) / .08); }
+  .rtext { color: rgb(var(--c)); }
+  .rfill { background: rgb(var(--c)); }
+  .ms { font-family: 'Material Symbols Rounded'; font-weight: normal; font-style: normal; font-size: 24px; line-height: 1; display: inline-block; letter-spacing: normal; text-transform: none; white-space: nowrap; direction: ltr; font-feature-settings: 'liga'; -webkit-font-smoothing: antialiased; user-select: none; }
+  .num { direction: ltr; unicode-bidi: isolate; display: inline-block; }
+  .safe-x { padding-inline: max(1rem, env(safe-area-inset-left), env(safe-area-inset-right)); }
+  .enter > * { animation: up .35s ease both; }
+  .enter > *:nth-child(2) { animation-delay: .05s; } .enter > *:nth-child(3) { animation-delay: .1s; }
+  @keyframes up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .spin { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
+  .live-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  button, select, input, textarea { font-family: inherit; }
+</style>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-accent-50 via-slate-50 to-slate-50 font-sans text-slate-800 antialiased dark:from-accent-950/20 dark:via-zinc-950 dark:to-zinc-950 dark:text-zinc-100">
+
+<header class="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 pt-[env(safe-area-inset-top)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/80">
+  <div class="safe-x mx-auto flex max-w-6xl items-center gap-3 py-2">
+    <img src="logo.jpg" alt="الشعار" class="h-10 w-10 rounded-xl object-cover shadow-sm">
+    <div class="min-w-0 flex-1">
+      <h1 class="truncate text-base font-extrabold leading-tight" id="appName">مراقب النانو</h1>
+      <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-zinc-400">
+        <span id="statusDot" class="h-2 w-2 rounded-full bg-slate-400"></span>
+        <span id="statusText">جاري التحميل…</span>
+      </div>
+    </div>
+    <button id="btnInstall" class="hidden min-h-[44px] items-center gap-1 rounded-xl bg-accent-600 px-3 text-sm font-bold text-white transition hover:bg-accent-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500 dark:bg-accent-400 dark:text-zinc-950 dark:hover:bg-accent-300" aria-label="تثبيت التطبيق"><span class="ms !text-[20px]" aria-hidden="true">install_mobile</span><span class="hidden sm:inline">تثبيت</span></button>
+    <button id="btnRefresh" class="flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-500 dark:text-zinc-300 dark:hover:bg-zinc-800" aria-label="تحديث الآن"><span class="ms" id="refreshIcon" aria-hidden="true">refresh</span></button>
+    <button id="btnTheme" class="flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-500 dark:text-zinc-300 dark:hover:bg-zinc-800" aria-label="تبديل الوضع الليلي"><span class="ms" id="themeIcon" aria-hidden="true">dark_mode</span></button>
+    <button id="btnSettings" class="flex h-11 w-11 items-center justify-center rounded-xl text-slate-600 transition hover:bg-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent-500 dark:text-zinc-300 dark:hover:bg-zinc-800" aria-label="الإعدادات"><span class="ms" aria-hidden="true">settings</span></button>
+  </div>
+</header>
+
+<main class="safe-x mx-auto max-w-6xl space-y-4 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+  <div id="banner" class="hidden"></div>
+  <section id="hero" class="grid gap-4 lg:grid-cols-3"></section>
+  <section id="insights"></section>
+  <section id="cards" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></section>
+
+  <section class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900" aria-label="سجل الإشارة">
+    <div class="flex items-center gap-3">
+      <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-50 text-accent-600 dark:bg-accent-950/40 dark:text-accent-400"><span class="ms !text-[20px]" aria-hidden="true">show_chart</span></span>
+      <h3 class="flex-1 text-[15px] font-bold">سجل الإشارة و CCQ</h3>
+      <button id="btnClearHistory" class="min-h-[44px] rounded-xl px-3 text-xs font-bold text-slate-500 transition hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800">مسح السجل</button>
+    </div>
+    <p id="chartEmpty" class="py-10 text-center text-sm text-slate-500 dark:text-zinc-400">يحتاج الرسم قراءتين على الأقل. انتظر التحديث التالي.</p>
+    <div id="chartWrap" dir="ltr" class="mt-3 hidden h-56"><canvas id="chart" aria-label="رسم بياني للإشارة و CCQ" role="img"></canvas></div>
+  </section>
+
+  <footer class="pt-2 text-center text-xs text-slate-400 dark:text-zinc-500"><span id="footTxt"></span></footer>
+</main>
+
+<div id="toasts" class="pointer-events-none fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))]"></div>
+
+<div id="modal" class="fixed inset-0 z-40 hidden items-end justify-center bg-slate-950/50 p-0 backdrop-blur-sm sm:items-center sm:p-4" aria-hidden="true">
+  <div role="dialog" aria-modal="true" aria-labelledby="mTitle" class="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl border border-slate-200 bg-white p-5 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900 sm:rounded-3xl">
+    <div class="mb-4 flex items-center gap-3">
+      <h2 id="mTitle" class="flex-1 text-lg font-extrabold">الإعدادات</h2>
+      <button id="mClose" class="flex h-11 w-11 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:text-zinc-400 dark:hover:bg-zinc-800" aria-label="إغلاق"><span class="ms" aria-hidden="true">close</span></button>
+    </div>
+    <form id="settingsForm" class="space-y-4" autocomplete="off">
+      <label class="block text-sm font-bold">مصدر البيانات
+        <select id="fMode" class="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3 font-normal focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/30 dark:border-zinc-700 dark:bg-zinc-950">
+          <option value="demo">تجريبي (بيانات محاكاة)</option>
+          <option value="api">API حقيقي (status.cgi)</option>
+          <option value="manual">لصق JSON يدوياً</option>
+        </select>
+      </label>
+      <div id="apiFields" class="hidden space-y-3">
+        <label class="block text-sm font-bold">عنوان API
+          <input id="fUrl" type="url" dir="ltr" placeholder="http://192.168.1.20/status.cgi" class="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3 font-normal focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/30 dark:border-zinc-700 dark:bg-zinc-950">
+        </label>
+        <div class="grid grid-cols-2 gap-3">
+          <label class="block text-sm font-bold">ترويسة التفويض (اختياري)
+            <input id="fAuthH" type="text" dir="ltr" placeholder="Authorization" class="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3 font-normal focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/30 dark:border-zinc-700 dark:bg-zinc-950">
+          </label>
+          <label class="block text-sm font-bold">القيمة
+            <input id="fAuthV" type="password" dir="ltr" placeholder="Bearer …" class="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3 font-normal focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/30 dark:border-zinc-700 dark:bg-zinc-950">
+          </label>
+        </div>
+        <label class="flex min-h-[44px] items-center gap-3 text-sm"><input id="fCred" type="checkbox" class="h-5 w-5 accent-indigo-600"> إرسال الكوكيز (جلسة تسجيل الدخول)</label>
+        <p class="rounded-xl bg-amber-50 p-3 text-xs leading-6 text-amber-800 dark:bg-amber-400/10 dark:text-amber-300">المتصفح قد يمنع الطلب بسبب CORS. الحل: تشغيل التطبيق عبر وسيط (proxy) محلي أو خدمة وسيطة تضيف ترويسة Access-Control-Allow-Origin وتتولى تسجيل الدخول للجهاز.</p>
+      </div>
+      <div id="manualFields" class="hidden">
+        <label class="block text-sm font-bold">الصق ناتج status.cgi
+          <textarea id="fManual" dir="ltr" rows="7" class="mt-1 w-full rounded-xl border border-slate-300 bg-white p-3 font-mono text-xs font-normal focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/30 dark:border-zinc-700 dark:bg-zinc-950"></textarea>
+        </label>
+      </div>
+      <label id="intervalRow" class="block text-sm font-bold">التحديث التلقائي كل (ثانية، 0 = يدوي)
+        <input id="fInterval" type="number" min="0" max="3600" step="1" class="mt-1 min-h-[44px] w-full rounded-xl border border-slate-300 bg-white px-3 font-normal focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/30 dark:border-zinc-700 dark:bg-zinc-950">
+      </label>
+      <button type="submit" class="min-h-[48px] w-full rounded-xl bg-accent-600 font-bold text-white shadow-sm transition hover:bg-accent-700 active:scale-[.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-500 dark:bg-accent-400 dark:text-zinc-950 dark:hover:bg-accent-300">حفظ وتحديث</button>
+    </form>
+    <div class="mt-5 border-t border-slate-200 pt-4 dark:border-zinc-800">
+      <h3 class="mb-2 text-sm font-bold">النسخ الاحتياطي</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <button id="btnExport" class="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-slate-300 text-sm font-bold transition hover:bg-slate-50 dark:border-zinc-700 dark:hover:bg-zinc-800"><span class="ms !text-[20px]" aria-hidden="true">download</span>تصدير JSON</button>
+        <button id="btnImport" class="flex min-h-[44px] items-center justify-center gap-2 rounded-xl border border-slate-300 text-sm font-bold transition hover:bg-slate-50 dark:border-zinc-700 dark:hover:bg-zinc-800"><span class="ms !text-[20px]" aria-hidden="true">upload_file</span>استيراد JSON</button>
+      </div>
+      <p class="mt-2 text-xs text-slate-500 dark:text-zinc-400">يُصدَّر الإعدادات وسجل القراءات (دون قيمة ترويسة التفويض).</p>
+      <input id="fImport" type="file" accept="application/json,.json" class="hidden">
+    </div>
+  </div>
+</div>
+
+<script type="application/json" id="rules">
+{
+  "labels": { "strong": "قوية", "good": "جيدة", "weak": "ضعيفة" },
+  "scores": { "strong": 100, "good": 62, "weak": 22 },
+  "overall": { "strong": 85, "good": 55 },
+  "signal": { "strong": -60, "good": -72, "saturate": -40, "min": -95, "max": -30, "weight": 3,
+    "tips": {
+      "strong": "إشارة ممتازة؛ تكفي لأعلى معدلات النقل بهامش أمان كبير.",
+      "good": "إشارة مقبولة لكن الهامش محدود؛ أي عائق أو تغيّر جوي قد يخفض السرعة. حسّن اتجاه الهوائي.",
+      "weak": "إشارة ضعيفة؛ السبب غالباً بُعد المسافة أو عائق في خط الرؤية أو اتجاه خاطئ للهوائي.",
+      "saturate": "الإشارة قوية جداً (أعلى من -40) وقد تسبب تشبّع المستقبل؛ قلّل قدرة الإرسال أو زِد المسافة."
+    } },
+  "ccq": { "strong": 90, "good": 75, "weight": 3,
+    "tips": {
+      "strong": "جودة الارتباط عالية؛ نسبة إعادة الإرسال منخفضة جداً.",
+      "good": "CCQ جيد لكن دون 90٪؛ هناك إعادة إرسال بسيطة، غالباً بسبب تداخل أو عدم توازن H/V أو انعكاسات.",
+      "weak": "CCQ منخفض؛ حزم كثيرة تُعاد. السبب المعتاد: تداخل على القناة أو اتجاه سيئ أو عائق في منطقة فرنل. جرّب قناة أخرى."
+    } },
+  "hv": { "strong": 3, "good": 6, "dead": 5, "weight": 2,
+    "tips": {
+      "strong": "سلسلتا H وV متوازنتان (فرق {diff} dB)؛ استقطاب الهوائي منسجم مع الطرف الآخر.",
+      "good": "فرق {diff} dB بين H وV؛ مقبول لكن الأفضل أن يقل عن 3 dB. دقّق محاذاة الهوائي.",
+      "weak": "فرق {diff} dB بين H وV (المقبول ≤ 6) والسلسلة {low} هي الأضعف. غالباً بسبب انحراف المحاذاة أو اختلاف الاستقطاب مع الـ AP أو انعكاسات. اضبط الزاوية وافحص الطرف الآخر.",
+      "dead": "السلسلة {low} شبه معدومة؛ افحص الكابل والموصلات وسلامة الهوائي."
+    } },
+  "rate": { "strong": 0.7, "good": 0.4, "tx": { "weight": 1.5 }, "rx": { "weight": 1.5 },
+    "tips": {
+      "tx": {
+        "strong": "معدل الإرسال {v} Mbps ({pct}٪ من الحد الأقصى {max}) ممتاز.",
+        "good": "معدل الإرسال {v} Mbps ({pct}٪ من {max}) جيد لكنه دون الإمكانات.",
+        "weak": "معدل الإرسال {v} Mbps ({pct}٪ فقط من {max}). السبب المعتاد: الـ AP يستقبل إشارتك بشكل أضعف، أو عدم توازن H/V، أو تداخل عند الطرف الآخر."
+      },
+      "rx": {
+        "strong": "معدل الاستقبال {v} Mbps ({pct}٪ من الحد الأقصى {max}) ممتاز.",
+        "good": "معدل الاستقبال {v} Mbps ({pct}٪ من {max}) جيد لكنه دون الإمكانات.",
+        "weak": "معدل الاستقبال {v} Mbps ({pct}٪ فقط من {max}). راجع الإشارة وCCQ وضوضاء القناة."
+      }
+    } },
+  "noise": { "strong": -92, "good": -85, "weight": 1,
+    "tips": {
+      "strong": "ضوضاء القناة منخفضة؛ بيئة طيفية نظيفة (SNR ≈ {snr} dB).",
+      "good": "ضوضاء متوسطة يوجد معها بعض التداخل (SNR ≈ {snr} dB). جرّب قناة أنظف.",
+      "weak": "ضوضاء مرتفعة تقلل SNR (≈ {snr} dB)؛ غيّر القناة أو قلّل العرض أو افحص الطيف عبر airView."
+    } },
+  "quality": { "strong": 80, "good": 60, "weight": 1,
+    "tips": {
+      "strong": "جودة airMax عالية؛ الجدولة مع الـ AP مستقرة.",
+      "good": "جودة airMax {v}٪ متوسطة؛ تتأثر بإعادة الإرسال والتداخل.",
+      "weak": "جودة airMax {v}٪ منخفضة؛ راجع CCQ والتداخل واتجاه الهوائي."
+    } },
+  "capacity": { "strong": 70, "good": 40, "weight": 1,
+    "tips": {
+      "strong": "سعة airMax عالية؛ الرابط يستغل معدلات نقل عالية.",
+      "good": "سعة airMax {v}٪ متوسطة؛ معدلات النقل أقل من المتاح.",
+      "weak": "سعة airMax {v}٪ منخفضة؛ مرتبطة بانخفاض معدلات الإرسال/الاستقبال. عالج عدم توازن H/V أو الإشارة أولاً."
+    } },
+  "errors": { "strong": 10, "good": 200, "weight": 1,
+    "tips": {
+      "strong": "لا أخطاء تُذكر في العدّادات.",
+      "good": "أخطاء قليلة (≈ {rate} يومياً) لا تؤثر عملياً؛ راقبها.",
+      "weak": "أخطاء كثيرة (≈ {rate} يومياً): افحص التشفير والتداخل والكابل."
+    } },
+  "eth": {
+    "tips": {
+      "strong": "منفذ الشبكة يعمل بسرعة {speed} Mbps Full Duplex.",
+      "weak": "المنفذ بسرعة منخفضة أو Half Duplex؛ افحص الكابل والموصلات (يجب أن تكون 100 Mbps Full على الأقل).",
+      "down": "كابل الشبكة غير متصل بالمنفذ."
+    } },
+  "system": { "cpu": { "strong": 50, "good": 80 }, "ram": { "strong": 30, "good": 15 },
+    "tips": {
+      "strong": "الجهاز يعمل بحمل خفيف وذاكرة كافية.",
+      "good": "حمل أو ذاكرة بمستوى متوسط؛ لا مشكلة حالياً.",
+      "weak": "المعالج أو الذاكرة تحت ضغط عالٍ؛ قد يؤثر على الأداء. أعد تشغيل الجهاز وراجع الخدمات."
+    } },
+  "counters": { "tx_retries": "إعادة إرسال", "rx_crypts": "أخطاء فك التشفير", "missed_beacons": "Beacons مفقودة", "err_other": "أخطاء أخرى", "rx_nwids": "NWID خاطئ", "rx_frags": "حزم مجزأة" }
+}
+</script>
+
+<script type="application/json" id="demo-data">
+{ "host": {
+	"uptime": 873494,
+	"time": "2018-06-02 19:03:08",
+	"fwversion": "v6.1.7-licensed.32555.180523.1625",
+	"fwprefix": "XW",
+	"hostname": "PowerBeam M5 400",
+	"devmodel": "PowerBeam M5 400",
+	"netrole": "router",
+	"totalram": 63606784,
+	"freeram": 37310464,
+	"cpuload": 9.0,
+	"cputotal": 87335485,
+	"cpubusy": 9711539
+ },
+ "wireless": {
+	"mode": "sta",
+	"essid": "NSHWAN (V30)07805748874",
+	"hide_essid": 0,
+	"apmac": "68:D7:9A:A8:AF:B1",
+	"countrycode": 511,
+	"channel": 92,
+	"frequency": "5460 MHz",
+	"dfs": "0",
+	"opmode": "11NAHT20",
+	"antenna": "400 - 25 dBi",
+	"chains": "2X2",
+	"signal": -49, "rssi": 47, "noisef": -97,
+	"txpower": 26,
+	"ack": 37,
+	"distance": 1950,
+	"ccq": 841,
+	"txrate": "39", "rxrate": "130",
+	"security": "none", "qos": "No QoS",
+	"rstatus": 5,
+	"count": 1, "cac_nol": 0, "nol_chans": 0,
+	"polling": {
+		"enabled": 1, "quality": 65, "capacity": 32, "priority": 2, "noack": 0,
+		"airsync_mode": 0, "airsync_connections": 0,
+		"airsync_down_util" : 0, "airsync_up_util" : 0,
+		"airselect" : 0, "airselect_interval" : 1000,
+		"ff_mode" : 0, "ff_duration" : 0, "ff_dlulratio" : 0,
+		"atpc_status" : 0
+	},
+	"stats": {		"rx_nwids": 0,
+		"rx_crypts": 770,
+		"rx_frags": 0,
+		"tx_retries": 0,
+		"missed_beacons": 0,
+		"err_other": 0
+	},
+	"wds": 0,
+	"aprepeater": 0,
+	"chwidth": 20,
+	"chanbw": 20,
+	"cwmmode": 0,
+	"rx_chainmask": 3,
+	"tx_chainmask": 3,
+	"chainrssi" : [ 46, 22, 0 ],
+	"chainrssimgmt" : [ 48, 23, 0 ],
+	"chainrssiext" : [ 46, 22, 0 ]
+ },
+ "airview": { "enabled": 0 },
+ "services": { "dhcpc": 0, "dhcpd": 1, "pppoe": 1 },
+ "firewall": { "iptables": 0, "ebtables" : 0, "ip6tables": 0, "eb6tables" : 0 },
+ "unms": { "status": 0, "timestamp" : "", "link" : "" },
+ "genuine": "/images/genuine.png",
+ "interfaces" : [
+	{
+		"ifname" : "lo",
+		"hwaddr": "00:00:00:00:00:00",
+		"enabled" : true,
+		"status" : { "plugged": 1, "speed": 0, "duplex": 255 },
+		"services" : { "dhcpc": false, "dhcpd": false, "pppoe": false }
+	},
+	{
+		"ifname" : "eth0",
+		"hwaddr": "18:E8:29:DD:F9:B6",
+		"enabled" : true,
+		"status" : { "plugged": 1, "speed": 100, "duplex": 1 },
+		"services" : { "dhcpc": false, "dhcpd": true, "pppoe": false }
+	},
+	{
+		"ifname" : "wifi0",
+		"hwaddr": "18:E8:29:DC:F9:B6",
+		"enabled" : true,
+		"status" : { "plugged": 1, "speed": 0, "duplex": 255 },
+		"services" : { "dhcpc": false, "dhcpd": false, "pppoe": false }
+	},
+	{
+		"ifname" : "ath0",
+		"hwaddr": "18:E8:29:DC:F9:B6",
+		"enabled" : true,
+		"status" : { "plugged": 1, "speed": 0, "duplex": 255 },
+		"services" : { "dhcpc": false, "dhcpd": false, "pppoe": false }
+	},
+	{
+		"ifname" : "ppp0",
+		"hwaddr": "00:00:00:00:00:00",
+		"enabled" : true,
+		"status" : { "plugged": 1, "speed": 0, "duplex": 255 },
+		"services" : { "dhcpc": false, "dhcpd": false, "pppoe": false }
+	}
+ ]
+}
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+(function () {
+'use strict';
+
+/* ---------- Data & helpers ---------- */
+const RULES = JSON.parse($('#rules').text());
+const DEMO_BASE = JSON.parse($('#demo-data').text());
+const CARD = 'rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900';
+const MUTED = 'text-slate-500 dark:text-zinc-400';
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(APP_CONFIG.storagePrefix + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(APP_CONFIG.storagePrefix + k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+
+const S = {
+  settings: Object.assign({}, APP_CONFIG.defaults, store.get('settings', {})),
+  history: Array.isArray(store.get('history', [])) ? store.get('history', []) : [],
+  data: null, metrics: null, status: 'loading', error: null, updated: null, rendered: false
+};
+
+const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const num = (v) => { const n = parseFloat(v); return isFinite(n) ? n : null; };
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const fmt = (n, d = 0) => (n == null ? '—' : String(+Number(n).toFixed(d)));
+const fill = (t, o) => t.replace(/\{(\w+)\}/g, (_, k) => (o[k] == null ? '' : o[k]));
+const grade = (v, s, g, hi = true) => (hi ? (v >= s ? 'strong' : v >= g ? 'good' : 'weak') : (v <= s ? 'strong' : v <= g ? 'good' : 'weak'));
+const ic = (n, c = '') => `<span class="ms ${c}" aria-hidden="true">${n}</span>`;
+const N = (v, extra = '') => `<span class="num ${extra}">${esc(v)}</span>`;
+const SCORE = RULES.scores;
+const fmtUp = (s) => { const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60); return [d ? d + ' يوم' : '', h ? h + ' س' : '', (!d && m) ? m + ' د' : ''].filter(Boolean).join(' ') || 'أقل من دقيقة'; };
+const nowTime = () => new Date().toLocaleTimeString('en-GB');
+
+/* ---------- Toasts ---------- */
+function toast(msg, o = {}) {
+  const cls = o.type === 'error' ? 'bg-red-600 text-white' : 'bg-slate-900 text-white dark:bg-zinc-100 dark:text-zinc-900';
+  const el = $(`<div role="status" class="pointer-events-auto flex max-w-md items-center gap-3 rounded-xl px-4 py-2 text-sm shadow-lg ${cls}"></div>`);
+  el.append($('<span class="flex-1 py-1">').text(msg));
+  if (o.action) el.append($('<button class="min-h-[44px] px-2 font-bold underline">').text(o.action.label).on('click', () => { o.action.fn(); el.remove(); }));
+  $('#toasts').append(el);
+  if (!o.sticky) setTimeout(() => el.fadeOut(200, () => el.remove()), o.ms || 3400);
+}
+
+/* ---------- Data sources ---------- */
+const demo = { t0: Date.now(), n: 0 };
+function demoSample() {
+  const b = JSON.parse(JSON.stringify(DEMO_BASE)); const w = b.wireless; demo.n++;
+  const j = (a) => (Math.random() * 2 - 1) * a;
+  const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+  w.noisef = Math.round(-97 + j(1.2));
+  w.signal = Math.round(-49 + j(2.5));
+  w.rssi = w.signal - w.noisef;
+  w.chainrssi = [Math.round(w.rssi - 1 + j(1.5)), Math.round(22 + j(2)), 0];
+  w.ccq = Math.round(clamp(841 + j(70), 0, 1000));
+  w.txrate = pick(['39', '39', '39', '52', '26']);
+  w.rxrate = pick(['130', '130', '130', '117', '104']);
+  w.polling.quality = Math.round(65 + j(5));
+  w.polling.capacity = Math.round(32 + j(4));
+  w.stats.rx_crypts += demo.n * Math.floor(Math.random() * 3);
+  if (Math.random() < .15) w.stats.tx_retries += Math.floor(Math.random() * 4);
+  b.host.uptime += Math.round((Date.now() - demo.t0) / 1000);
+  b.host.cpuload = +(9 + j(4)).toFixed(1);
+  b.host.freeram = Math.round(b.host.freeram + j(600000));
+  b.host.time = new Date().toISOString().replace('T', ' ').slice(0, 19);
+  return Promise.resolve(b);
+}
+
+async function fetchApi() {
+  const s = S.settings;
+  if (!s.url) throw new Error('أدخل عنوان API في الإعدادات');
+  const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 8000);
+  try {
+    const headers = { Accept: 'application/json' };
+    if (s.authHeader && s.authValue) headers[s.authHeader] = s.authValue;
+    const res = await fetch(s.url, { headers, credentials: s.credentials ? 'include' : 'same-origin', cache: 'no-store', signal: ctl.signal });
+    if (!res.ok) throw new Error('رد الجهاز بالخطأ ' + res.status);
+    return await res.json();
+  } catch (e) {
+    if (e.name === 'AbortError') throw new Error('انتهت مهلة الاتصال');
+    if (e instanceof SyntaxError) throw new Error('الرد ليس JSON صالحاً');
+    if (e instanceof TypeError) throw new Error('تعذّر الاتصال بالجهاز (تحقق من العنوان أو CORS)');
+    throw e;
+  } finally { clearTimeout(tm); }
+}
+
+function getRaw() {
+  const s = S.settings;
+  if (s.mode === 'api') return fetchApi();
+  if (s.mode === 'manual') {
+    try { return Promise.resolve(JSON.parse(s.manualJson)); } catch (e) { return Promise.reject(new Error('JSON اليدوي غير صالح')); }
+  }
+  return demoSample();
+}
+
+/* Maps the airOS status.cgi payload to a flat model. Change only this to support another API shape. */
+const RATE_PER_STREAM = { 5: 16.25, 10: 32.5, 20: 65, 40: 135, 80: 292.5 };
+function normalize(raw) {
+  if (!raw || typeof raw !== 'object' || !raw.wireless) throw new Error('البنية لا تطابق airOS status.cgi');
+  const w = raw.wireless, h = raw.host || {}, st = w.stats || {}, p = w.polling || {};
+  const chains = parseInt((String(w.chains || '2').match(/\d+/) || [2])[0], 10) || 2;
+  const width = num(w.chwidth) || num(w.chanbw) || 20;
+  const noise = num(w.noisef), signal = num(w.signal);
+  const chainRssi = (Array.isArray(w.chainrssi) ? w.chainrssi : []).slice(0, chains).map(num);
+  const ifaces = Array.isArray(raw.interfaces) ? raw.interfaces : [];
+  const eth = ifaces.find((i) => /^eth/.test(i.ifname)) || null;
+  const totalRam = num(h.totalram), freeRam = num(h.freeram);
+  return {
+    host: { model: h.devmodel || h.hostname || '—', hostname: h.hostname || '—', fw: h.fwversion || '—', uptime: num(h.uptime) || 0, time: h.time || '—', cpu: num(h.cpuload), freePct: totalRam ? freeRam / totalRam * 100 : null, ramTotal: totalRam, role: h.netrole || '—' },
+    w: {
+      mode: w.mode, essid: w.essid, apmac: w.apmac, channel: w.channel, freq: w.frequency, opmode: w.opmode, width, chains,
+      signal, rssi: num(w.rssi), noise, snr: signal != null && noise != null ? signal - noise : null,
+      ccq: num(w.ccq) != null ? num(w.ccq) / 10 : null, tx: num(w.txrate), rx: num(w.rxrate),
+      maxRate: (RATE_PER_STREAM[width] || 65) * chains, txpower: num(w.txpower), ack: num(w.ack), distance: num(w.distance),
+      antenna: w.antenna, security: w.security, qos: w.qos, dfs: w.dfs,
+      polling: { enabled: !!p.enabled, quality: num(p.quality), capacity: num(p.capacity) },
+      stats: st, chainRssi
+    },
+    eth: eth ? { plugged: !!eth.status.plugged, speed: num(eth.status.speed) || 0, duplex: eth.status.duplex } : null
+  };
+}
+
+/* ---------- Evaluation ---------- */
+const NAMES = { signal: 'الإشارة', ccq: 'CCQ', hv: 'توازن H/V', tx: 'معدل الإرسال', rx: 'معدل الاستقبال', noise: 'الضوضاء', quality: 'جودة airMax', capacity: 'سعة airMax', errors: 'الأخطاء' };
+
+function evaluate(d) {
+  const w = d.w, R = RULES, m = {};
+  if (w.signal != null) {
+    const r = grade(w.signal, R.signal.strong, R.signal.good);
+    m.signal = { r, w: R.signal.weight, tip: w.signal > R.signal.saturate ? R.signal.tips.saturate : R.signal.tips[r] };
+  }
+  if (w.ccq != null) { const r = grade(w.ccq, R.ccq.strong, R.ccq.good); m.ccq = { r, w: R.ccq.weight, tip: R.ccq.tips[r] }; }
+  if (w.chains >= 2 && w.chainRssi.length >= 2 && w.chainRssi[0] != null && w.chainRssi[1] != null) {
+    const [a, b] = w.chainRssi, diff = Math.abs(a - b), low = a < b ? 'H' : 'V';
+    const dead = Math.min(a, b) <= R.hv.dead;
+    const r = dead ? 'weak' : grade(diff, R.hv.strong, R.hv.good, false);
+    m.hv = { r, w: R.hv.weight, diff, low, h: a, v: b, tip: fill(R.hv.tips[dead ? 'dead' : r], { diff, low }) };
+  }
+  ['tx', 'rx'].forEach((k) => {
+    if (w[k] == null) return;
+    const ratio = w[k] / w.maxRate, r = grade(ratio, R.rate.strong, R.rate.good);
+    m[k] = { r, w: R.rate[k].weight, ratio, tip: fill(R.rate.tips[k][r], { v: fmt(w[k], 1), pct: Math.round(ratio * 100), max: fmt(w.maxRate, 0) }) };
+  });
+  if (w.noise != null) { const r = grade(w.noise, R.noise.strong, R.noise.good, false); m.noise = { r, w: R.noise.weight, tip: fill(R.noise.tips[r], { snr: fmt(w.snr) }) }; }
+  if (w.polling.enabled) {
+    ['quality', 'capacity'].forEach((k) => {
+      const v = w.polling[k]; if (v == null) return;
+      const r = grade(v, R[k].strong, R[k].good); m[k] = { r, w: R[k].weight, tip: fill(R[k].tips[r], { v }) };
+    });
+  }
+  const upDays = Math.max(d.host.uptime / 86400, 0.04);
+  const keys = Object.keys(R.counters);
+  const total = keys.filter((k) => k !== 'rx_frags').reduce((a, k) => a + (num(w.stats[k]) || 0), 0);
+  const rate = total / upDays, rr = grade(rate, R.errors.strong, R.errors.good, false);
+  m.errors = { r: rr, w: R.errors.weight, total, rate, tip: fill(R.errors.tips[rr], { rate: Math.round(rate) }) };
+
+  // Not part of the link score
+  if (d.eth) {
+    const e = d.eth, ok = e.plugged && e.speed >= 100 && e.duplex !== 0;
+    m.eth = { r: ok ? 'strong' : 'weak', tip: fill(R.eth.tips[!e.plugged ? 'down' : ok ? 'strong' : 'weak'], { speed: e.speed }) };
+  }
+  if (d.host.cpu != null) {
+    const rc = grade(d.host.cpu, R.system.cpu.strong, R.system.cpu.good, false);
+    const rm = d.host.freePct != null ? grade(d.host.freePct, R.system.ram.strong, R.system.ram.good) : 'strong';
+    const order = ['strong', 'good', 'weak'], r = order[Math.max(order.indexOf(rc), order.indexOf(rm))];
+    m.system = { r, rc, rm, tip: R.system.tips[r] };
+  }
+
+  // Overall score
+  const scored = Object.keys(m).filter((k) => NAMES[k]);
+  const sw = scored.reduce((a, k) => a + m[k].w, 0);
+  const score = Math.round(scored.reduce((a, k) => a + m[k].w * SCORE[m[k].r], 0) / (sw || 1));
+  const r = score >= R.overall.strong ? 'strong' : score >= R.overall.good ? 'good' : 'weak';
+  const names = (rt) => scored.filter((k) => m[k].r === rt).map((k) => NAMES[k]);
+  m.overall = { r, score, strongNames: names('strong'), goodNames: names('good'), weakNames: names('weak') };
+  return m;
+}
+
+function insights(d, m) {
+  const w = d.w, out = [];
+  const notStrong = (k) => m[k] && m[k].r !== 'strong';
+  if (m.hv && m.hv.r !== 'strong') {
+    const aff = ['ccq', 'tx', 'capacity', 'quality'].filter(notStrong).map((k) => NAMES[k]);
+    out.push({ sev: m.hv.r, icon: 'equalizer', title: 'عدم توازن H/V هو المشتبه الأول',
+      text: `السلسلة ${m.hv.low} أضعف بمقدار ${m.hv.diff} dB من الأخرى${w.signal != null ? ` رغم أن الإشارة الكلية ${w.signal} dBm` : ''}.` + (aff.length ? ` هذا يفسّر على الأرجح تراجع: ${aff.join('، ')}.` : '') + ' ابدأ بتحسين محاذاة الهوائي بتحريك بسيط ثم راقب الفرق، وبعدها افحص استقطاب وإعدادات الـ AP.' });
+  }
+  if (m.tx && m.rx && SCORE[m.rx.r] - SCORE[m.tx.r] >= 40) {
+    out.push({ sev: m.tx.r, icon: 'swap_vert', title: 'اختلاف بين الإرسال والاستقبال',
+      text: `الاستقبال ${fmt(w.rx, 1)} Mbps مقابل إرسال ${fmt(w.tx, 1)} Mbps: الـ AP يسمعك أسوأ مما تسمعه. افحص قدرة الإرسال/ATPC في هذا الجهاز وجودة استقبال الـ AP.` });
+  }
+  if (m.signal && m.signal.r === 'strong' && m.ccq && m.ccq.r !== 'strong' && (!m.hv || m.hv.r === 'strong')) {
+    out.push({ sev: m.ccq.r, icon: 'graphic_eq', title: 'إشارة قوية لكن CCQ لا يوازيها',
+      text: 'عندما تكون الإشارة قوية وCCQ منخفضاً فالسبب غالباً تداخل على القناة أو انعكاسات. جرّب قناة أخرى أو افحص الطيف.' });
+  }
+  if (m.signal && w.signal > RULES.signal.saturate) {
+    out.push({ sev: 'good', icon: 'warning', title: 'احتمال تشبّع المستقبل', text: RULES.signal.tips.saturate });
+  }
+  if (String(w.security).toLowerCase() === 'none') {
+    out.push({ sev: 'good', icon: 'lock_open', title: 'الارتباط اللاسلكي غير مشفّر', text: 'أي جهاز في المدى يمكنه التقاط البيانات. فعّل WPA2-AES على الـ AP وهذا الجهاز إن أمكن.' });
+  }
+  return out;
+}
+
+/* ---------- Visual building blocks ---------- */
+const pill = (r) => `<span class="r-${r} rchip inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold"><span class="rfill h-1.5 w-1.5 rounded-full"></span>${RULES.labels[r]}</span>`;
+const bar = (pct, r) => `<div class="h-2 w-full overflow-hidden rounded-full bg-slate-200/70 dark:bg-zinc-800"><div class="r-${r} rfill h-full rounded-full transition-all duration-200" style="width:${clamp(pct, 0, 100)}%"></div></div>`;
+const tipRow = (t) => `<div class="rtip mt-3 flex gap-2 rounded-xl p-3">${ic('lightbulb', '!text-[18px] rtext mt-0.5 shrink-0')}<p class="text-[13px] leading-6 text-slate-700 dark:text-zinc-300">${esc(t)}</p></div>`;
+const iconChip = (n) => `<span class="rchip flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">${ic(n, '!text-[20px]')}</span>`;
+
+function card(o) {
+  return `<section class="${CARD} ${o.r ? 'r-' + o.r : ''} ${o.span || ''}" aria-label="${esc(o.title)}">
+    <div class="flex items-center gap-3">${iconChip(o.icon)}<h3 class="flex-1 text-[15px] font-bold">${esc(o.title)}</h3>${o.r ? pill(o.r) : ''}</div>
+    <div class="mt-3">${o.body}</div>${o.tip ? tipRow(o.tip) : ''}</section>`;
+}
+
+const polar = (cx, cy, r, deg) => { const a = deg * Math.PI / 180; return [cx + r * Math.cos(a), cy - r * Math.sin(a)]; };
+const arc = (cx, cy, r, a0, a1) => { const [x0, y0] = polar(cx, cy, r, a0), [x1, y1] = polar(cx, cy, r, a1); return `M${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${Math.abs(a0 - a1) > 180 ? 1 : 0} 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`; };
+
+function gauge(v, r) {
+  const { min, max, strong, good } = RULES.signal, ang = (x) => 180 - clamp((x - min) / (max - min), 0, 1) * 180;
+  const zone = (a, b, c) => `<path d="${arc(100, 100, 80, ang(a), ang(b))}" fill="none" stroke-width="14" style="stroke:rgb(var(--r-${c}) / .22)"/>`;
+  const [px, py] = polar(100, 100, 80, ang(v));
+  return `<svg viewBox="0 0 200 122" class="mx-auto w-full max-w-[320px]" role="img" aria-label="قوة الإشارة ${v} dBm">
+    ${zone(min, good, 'weak')}${zone(good, strong, 'good')}${zone(strong, max, 'strong')}
+    <path d="${arc(100, 100, 80, 180, ang(v))}" fill="none" stroke-width="14" stroke-linecap="round" style="stroke:rgb(var(--r-${r}))"/>
+    <circle cx="${px.toFixed(2)}" cy="${py.toFixed(2)}" r="9" style="fill:rgb(var(--r-${r}))" stroke="white" stroke-width="3"/>
+    <text x="100" y="92" text-anchor="middle" font-size="38" font-weight="800" style="fill:currentColor;direction:ltr">${v}</text>
+    <text x="100" y="110" text-anchor="middle" font-size="12" style="fill:currentColor;opacity:.6">dBm</text>
+    <text x="20" y="120" text-anchor="middle" font-size="9" style="fill:currentColor;opacity:.5">${min}</text>
+    <text x="180" y="120" text-anchor="middle" font-size="9" style="fill:currentColor;opacity:.5">${max}</text></svg>`;
+}
+
+function ring(pct, r, label) {
+  const C = 2 * Math.PI * 42, off = C * (1 - clamp(pct, 0, 100) / 100);
+  return `<svg viewBox="0 0 100 100" class="h-28 w-28 shrink-0 -rotate-90" role="img" aria-label="${esc(label)}">
+    <circle cx="50" cy="50" r="42" fill="none" stroke-width="10" style="stroke:rgb(var(--r-${r}) / .18)"/>
+    <circle cx="50" cy="50" r="42" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" style="stroke:rgb(var(--r-${r}))"/></svg>`;
+}
+
+/* ---------- Render ---------- */
+function heroHtml(d, m) {
+  const w = d.w, o = m.overall;
+  const sig = m.signal ? `<section class="${CARD} r-${m.signal.r} lg:col-span-2" aria-label="قوة الإشارة">
+      <div class="flex items-center gap-3">${iconChip('signal_cellular_alt')}<h2 class="flex-1 text-base font-extrabold">قوة الإشارة</h2>${pill(m.signal.r)}</div>
+      <div class="mt-2 grid items-center gap-4 sm:grid-cols-2">
+        <div>${gauge(w.signal, m.signal.r)}</div>
+        <div class="grid grid-cols-3 gap-2 text-center">
+          ${[['RSSI', fmt(w.rssi), 'dB'], ['SNR', fmt(w.snr), 'dB'], ['الضوضاء', fmt(w.noise), 'dBm']].map((x) => `<div class="rounded-xl bg-slate-50 p-3 dark:bg-zinc-800/60"><div class="text-[11px] ${MUTED}">${x[0]}</div><div class="mt-1 text-xl font-extrabold">${N(x[1])}</div><div class="text-[11px] ${MUTED}">${x[2]}</div></div>`).join('')}
+        </div>
+      </div>${tipRow(m.signal.tip)}</section>` : '';
+  const verdict = { strong: 'ارتباط ممتاز', good: 'ارتباط جيد مع نقاط تحتاج تحسين', weak: 'ارتباط ضعيف يحتاج تدخلاً' }[o.r];
+  let tip = verdict + '.';
+  if (o.strongNames.length) tip += ` نقاط القوة: ${o.strongNames.join('، ')}.`;
+  const need = o.weakNames.concat(o.goodNames);
+  if (need.length) tip += ` تحتاج تحسيناً: ${need.join('، ')}.`;
+  const overall = `<section class="${CARD} r-${o.r}" aria-label="حالة الرابط">
+      <div class="flex items-center gap-3">${iconChip('monitor_heart')}<h2 class="flex-1 text-base font-extrabold">حالة الرابط</h2>${pill(o.r)}</div>
+      <div class="mt-3 flex items-center gap-4">
+        <div class="relative">${ring(o.score, o.r, 'التقييم العام ' + o.score)}<div class="absolute inset-0 flex flex-col items-center justify-center"><span class="text-3xl font-extrabold">${N(o.score)}</span><span class="text-[11px] ${MUTED}">من 100</span></div></div>
+        <div class="space-y-1 text-sm"><div class="flex items-center gap-2"><span class="r-strong rfill h-2 w-2 rounded-full"></span>${o.strongNames.length} قوية</div><div class="flex items-center gap-2"><span class="r-good rfill h-2 w-2 rounded-full"></span>${o.goodNames.length} جيدة</div><div class="flex items-center gap-2"><span class="r-weak rfill h-2 w-2 rounded-full"></span>${o.weakNames.length} ضعيفة</div></div>
+      </div>${tipRow(tip)}</section>`;
+  return sig + overall;
+}
+
+function insightsHtml(d, m) {
+  const list = insights(d, m);
+  const icons = { strong: 'check_circle' };
+  const items = list.length ? list.map((i) => `<li class="r-${i.sev} rtip flex gap-3 rounded-xl p-3">${ic(i.icon, 'rtext shrink-0')}<div><p class="text-sm font-bold">${esc(i.title)}</p><p class="mt-0.5 text-[13px] leading-6 text-slate-600 dark:text-zinc-400">${esc(i.text)}</p></div></li>`).join('')
+    : `<li class="r-strong rtip flex gap-3 rounded-xl p-3">${ic(icons.strong, 'rtext shrink-0')}<p class="text-sm font-bold">لا توجد مشاكل مترابطة؛ كل المؤشرات في وضع سليم.</p></li>`;
+  return `<div class="${CARD}"><div class="mb-3 flex items-center gap-3"><span class="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-50 text-accent-600 dark:bg-accent-950/40 dark:text-accent-400">${ic('troubleshoot', '!text-[20px]')}</span><h3 class="text-[15px] font-bold">التشخيص الذكي</h3></div><ul class="grid gap-2 lg:grid-cols-2">${items}</ul></div>`;
+}
+
+function cardsHtml(d, m) {
+  const w = d.w, out = [];
+  if (m.ccq) {
+    out.push(card({ title: 'CCQ', icon: 'wifi_tethering', r: m.ccq.r, tip: m.ccq.tip,
+      body: `<div class="flex items-center gap-4"><div class="relative">${ring(w.ccq, m.ccq.r, 'CCQ ' + w.ccq + '٪')}<div class="absolute inset-0 flex items-center justify-center text-2xl font-extrabold">${N(fmt(w.ccq, 1) + '%')}</div></div><div class="text-sm leading-7 ${MUTED}">جودة الإرسال<br>الحد الجيد ${N('≥ ' + RULES.ccq.good + '%')}<br>الحد القوي ${N('≥ ' + RULES.ccq.strong + '%')}</div></div>` }));
+  }
+  if (m.hv) {
+    const rowFor = (label, rssi) => {
+      const dbm = w.noise != null ? rssi + w.noise : null, rr = dbm != null ? grade(dbm, RULES.signal.strong, RULES.signal.good) : 'good';
+      return `<div class="r-${rr}"><div class="mb-1 flex items-center justify-between text-sm"><span class="font-bold">${label}</span><span class="rtext font-bold">${N(dbm != null ? dbm + ' dBm' : rssi + ' dB')} <span class="text-xs font-normal ${MUTED}">(RSSI ${N(rssi)})</span></span></div>${bar(rssi / 60 * 100, rr)}</div>`;
+    };
+    out.push(card({ title: 'توازن H / V', icon: 'equalizer', r: m.hv.r, tip: m.hv.tip, span: 'lg:col-span-2',
+      body: `<div class="grid items-center gap-4 sm:grid-cols-[1fr_auto]"><div class="space-y-3">${rowFor('H · Chain 0', m.hv.h)}${rowFor('V · Chain 1', m.hv.v)}</div>
+        <div class="text-center"><div class="text-[11px] ${MUTED}">الفرق</div><div class="rtext text-4xl font-extrabold">${N(m.hv.diff)}</div><div class="text-xs ${MUTED}">dB · المقبول ≤ ${RULES.hv.good}</div></div></div>` }));
+  }
+  [['tx', 'معدل الإرسال (TX)', 'north'], ['rx', 'معدل الاستقبال (RX)', 'south']].forEach(([k, title, icon]) => {
+    if (!m[k]) return;
+    out.push(card({ title, icon, r: m[k].r, tip: m[k].tip,
+      body: `<div class="flex items-baseline gap-1.5"><span class="text-3xl font-extrabold">${N(fmt(w[k], 1))}</span><span class="text-sm ${MUTED}">Mbps</span><span class="ms-auto text-xs ${MUTED}">من ${N(fmt(w.maxRate))}</span></div><div class="mt-2">${bar(m[k].ratio * 100, m[k].r)}</div>` }));
+  });
+  if (m.noise) {
+    out.push(card({ title: 'الضوضاء و SNR', icon: 'graphic_eq', r: m.noise.r, tip: m.noise.tip,
+      body: `<div class="flex items-baseline gap-1.5"><span class="text-3xl font-extrabold">${N(fmt(w.noise))}</span><span class="text-sm ${MUTED}">dBm</span><span class="ms-auto text-sm font-bold">SNR ${N(fmt(w.snr))} dB</span></div><div class="mt-2">${bar((-w.noise - 70) / 35 * 100, m.noise.r)}</div>` }));
+  }
+  [['quality', 'جودة airMax', 'health_and_safety'], ['capacity', 'سعة airMax', 'data_usage']].forEach(([k, title, icon]) => {
+    if (!m[k]) return;
+    out.push(card({ title, icon, r: m[k].r, tip: m[k].tip,
+      body: `<div class="flex items-baseline gap-1.5"><span class="text-3xl font-extrabold">${N(fmt(w.polling[k]))}</span><span class="text-sm ${MUTED}">%</span></div><div class="mt-2">${bar(w.polling[k], m[k].r)}</div>` }));
+  });
+  const e = m.errors, chips = Object.keys(RULES.counters).map((k) => { const v = num(w.stats[k]) || 0; return `<span class="rounded-lg bg-slate-100 px-2 py-1 text-xs dark:bg-zinc-800 ${v ? 'font-bold' : MUTED}">${RULES.counters[k]}: ${N(v)}</span>`; }).join('');
+  out.push(card({ title: 'الأخطاء', icon: 'bug_report', r: e.r, tip: e.tip,
+    body: `<div class="flex items-baseline gap-1.5"><span class="text-3xl font-extrabold">${N(fmt(e.total))}</span><span class="text-sm ${MUTED}">إجمالي منذ التشغيل</span></div><div class="mt-2 flex flex-wrap gap-1.5">${chips}</div>` }));
+  if (m.eth) {
+    const ee = d.eth;
+    out.push(card({ title: 'منفذ الشبكة (eth0)', icon: 'settings_ethernet', r: m.eth.r, tip: m.eth.tip,
+      body: `<div class="flex items-baseline gap-1.5"><span class="text-3xl font-extrabold">${N(ee.plugged ? ee.speed : '—')}</span><span class="text-sm ${MUTED}">Mbps · ${ee.duplex === 1 ? 'Full Duplex' : ee.duplex === 0 ? 'Half Duplex' : 'غير محدد'}</span></div>` }));
+  }
+  if (m.system) {
+    const h = d.host, rc = m.system.rc, rm = m.system.rm;
+    out.push(card({ title: 'النظام', icon: 'memory', r: m.system.r, tip: m.system.tip,
+      body: `<p class="mb-3 truncate text-sm font-bold">${esc(h.model)} <span class="font-normal ${MUTED}">· تشغيل ${esc(fmtUp(h.uptime))}</span></p>
+        <div class="space-y-2"><div><div class="mb-1 flex justify-between text-xs"><span>المعالج</span>${N(fmt(h.cpu, 1) + '%')}</div>${bar(h.cpu, rc)}</div>
+        <div><div class="mb-1 flex justify-between text-xs"><span>الذاكرة الحرة</span>${N(fmt(h.freePct) + '%')}</div>${bar(h.freePct, rm)}</div></div>` }));
+  }
+  const rows = [['الشبكة (SSID)', w.essid], ['MAC الـ AP', w.apmac], ['الوضع', w.mode === 'sta' ? 'محطة (Station)' : w.mode === 'ap' ? 'نقطة وصول (AP)' : w.mode],
+    ['القناة', `${w.channel} · ${w.freq}`], ['العرض / المعيار', `${w.width} MHz · ${w.opmode}`], ['المسافة', w.distance != null ? `${fmt(w.distance / 1000, 2)} كم` : '—'],
+    ['ACK', w.ack], ['قدرة الإرسال', `${fmt(w.txpower)} dBm`], ['الهوائي', w.antenna], ['التشفير', String(w.security).toLowerCase() === 'none' ? 'بدون تشفير' : String(w.security).toUpperCase()],
+    ['الإصدار', d.host.fw], ['وقت الجهاز', d.host.time]];
+  out.push(`<section class="${CARD} sm:col-span-2 lg:col-span-3" aria-label="تفاصيل الارتباط"><div class="mb-3 flex items-center gap-3"><span class="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-50 text-accent-600 dark:bg-accent-950/40 dark:text-accent-400">${ic('router', '!text-[20px]')}</span><h3 class="text-[15px] font-bold">تفاصيل الارتباط</h3></div>
+    <dl class="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2 lg:grid-cols-3">${rows.map((r) => `<div class="flex items-baseline justify-between gap-3 border-b border-slate-100 pb-2 dark:border-zinc-800"><dt class="${MUTED}">${r[0]}</dt><dd class="min-w-0 truncate font-bold" title="${esc(r[1])}">${N(r[1])}</dd></div>`).join('')}</dl></section>`);
+  return out.join('');
+}
+
+function renderStatus() {
+  const map = { live: ['bg-emerald-500 live-dot', 'مباشر'], demo: ['bg-amber-500 live-dot', 'وضع تجريبي'], manual: ['bg-sky-500', 'بيانات يدوية'], error: ['bg-red-500', 'تعذّر الاتصال'], loading: ['bg-slate-400', 'جاري التحميل…'] };
+  const key = S.status === 'ok' ? (S.settings.mode === 'api' ? 'live' : S.settings.mode) : S.status;
+  const [cls, txt] = map[key] || map.loading;
+  $('#statusDot').attr('class', 'h-2 w-2 rounded-full ' + cls);
+  $('#statusText').text(txt + (S.updated ? ' · ' + S.updated : ''));
+  if (S.error) {
+    $('#banner').removeClass('hidden').html(`<div class="r-weak rtip flex items-center gap-3 rounded-2xl border border-red-300/40 p-3 text-sm">${ic('cloud_off', 'rtext')}<p class="flex-1"><b>${esc(S.error)}</b>${S.data ? ' — يعرض آخر قراءة ناجحة.' : ''}</p><button id="bannerSet" class="min-h-[44px] rounded-xl px-3 font-bold underline">الإعدادات</button></div>`);
+  } else $('#banner').addClass('hidden').empty();
+}
+
+function render() {
+  if (!S.data) {
+    $('#hero').html(`<div class="${CARD} lg:col-span-3 py-12 text-center"><div class="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-accent-50 text-accent-600 dark:bg-accent-950/40 dark:text-accent-400">${ic('satellite_alt')}</div><p class="font-bold">لا توجد بيانات بعد</p><p class="mt-1 text-sm ${MUTED}">${S.error ? 'تحقق من إعدادات الاتصال ثم أعد المحاولة.' : 'جاري جلب أول قراءة…'}</p><button class="openSettings mt-4 min-h-[44px] rounded-xl bg-accent-600 px-5 font-bold text-white hover:bg-accent-700 dark:bg-accent-400 dark:text-zinc-950">فتح الإعدادات</button></div>`);
+    $('#insights, #cards').empty(); renderStatus(); return;
+  }
+  const m = S.metrics = evaluate(S.data);
+  $('#hero').html(heroHtml(S.data, m)); $('#insights').html(insightsHtml(S.data, m)); $('#cards').html(cardsHtml(S.data, m));
+  if (!S.rendered) { S.rendered = true; $('#hero, #insights, #cards').addClass('enter'); setTimeout(() => $('#hero, #insights, #cards').removeClass('enter'), 700); }
+  renderStatus(); updateChart();
+}
+
+/* ---------- Chart ---------- */
+let chart = null;
+function chartColors() { const dk = $('html').hasClass('dark'); return { grid: dk ? 'rgba(161,161,170,.15)' : 'rgba(100,116,139,.15)', tick: dk ? '#a1a1aa' : '#64748b', sig: dk ? '#818cf8' : '#4f46e5', ccq: dk ? '#38bdf8' : '#0284c7' }; }
+function updateChart() {
+  const h = S.history, ok = h.length > 1;
+  $('#chartEmpty').toggleClass('hidden', ok); $('#chartWrap').toggleClass('hidden', !ok);
+  if (!ok || typeof Chart === 'undefined') return;
+  const labels = h.map((p) => new Date(p.t).toLocaleTimeString('en-GB'));
+  if (!chart) {
+    Chart.defaults.font.family = 'Tajawal, sans-serif';
+    chart = new Chart($('#chart')[0], { type: 'line',
+      data: { labels, datasets: [{ label: 'الإشارة (dBm)', data: h.map((p) => p.s), yAxisID: 'y', tension: .35, borderWidth: 2, pointRadius: 0 }, { label: 'CCQ (%)', data: h.map((p) => p.c), yAxisID: 'y1', tension: .35, borderWidth: 2, pointRadius: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: false, interaction: { mode: 'index', intersect: false },
+        scales: { x: { ticks: { maxTicksLimit: 6 } }, y: { position: 'left', suggestedMin: -100, suggestedMax: -30 }, y1: { position: 'right', min: 0, max: 100, grid: { drawOnChartArea: false } } },
+        plugins: { legend: { position: 'bottom' } } } });
+  } else { chart.data.labels = labels; chart.data.datasets[0].data = h.map((p) => p.s); chart.data.datasets[1].data = h.map((p) => p.c); }
+  themeChart();
+}
+function themeChart() {
+  if (!chart) return; const c = chartColors();
+  chart.data.datasets[0].borderColor = c.sig; chart.data.datasets[1].borderColor = c.ccq;
+  ['x', 'y', 'y1'].forEach((k) => { chart.options.scales[k].ticks.color = c.tick; if (k !== 'y1') chart.options.scales[k].grid.color = c.grid; });
+  chart.options.plugins.legend.labels.color = c.tick; chart.update('none');
+}
+
+/* ---------- Refresh loop ---------- */
+let timer = null, inflight = false;
+async function refresh(manual) {
+  if (inflight) return; inflight = true; $('#refreshIcon').addClass('spin');
+  try {
+    const d = normalize(await getRaw());
+    S.data = d; S.error = null; S.status = 'ok'; S.updated = nowTime();
+    S.history.push({ t: Date.now(), s: d.w.signal, c: d.w.ccq, tx: d.w.tx, rx: d.w.rx });
+    if (S.history.length > APP_CONFIG.historyLimit) S.history = S.history.slice(-APP_CONFIG.historyLimit);
+    store.set('history', S.history);
+  } catch (e) {
+    S.error = e.message || 'خطأ غير معروف'; S.status = 'error';
+    if (manual) toast(S.error, { type: 'error' });
+  } finally { inflight = false; $('#refreshIcon').removeClass('spin'); render(); }
+}
+function schedule() {
+  clearInterval(timer); timer = null;
+  const s = S.settings, sec = Number(s.interval);
+  if (sec > 0 && s.mode !== 'manual') timer = setInterval(() => { if (!document.hidden) refresh(false); }, sec * 1000);
+}
+
+/* ---------- Theme ---------- */
+function applyTheme(dark) {
+  $('html').toggleClass('dark', dark);
+  $('#themeIcon').text(dark ? 'light_mode' : 'dark_mode');
+  $('meta[name="theme-color"]').attr('content', dark ? APP_CONFIG.themeColors.dark : APP_CONFIG.themeColors.light);
+  themeChart();
+}
+
+/* ---------- Settings modal ---------- */
+let lastFocus = null;
+function syncFields() {
+  const m = $('#fMode').val();
+  $('#apiFields').toggleClass('hidden', m !== 'api'); $('#manualFields').toggleClass('hidden', m !== 'manual'); $('#intervalRow').toggleClass('hidden', m === 'manual');
+}
+function openModal() {
+  const s = S.settings; lastFocus = document.activeElement;
+  $('#fMode').val(s.mode); $('#fUrl').val(s.url); $('#fAuthH').val(s.authHeader); $('#fAuthV').val(s.authValue); $('#fCred').prop('checked', !!s.credentials); $('#fManual').val(s.manualJson); $('#fInterval').val(s.interval);
+  syncFields(); $('#modal').removeClass('hidden').addClass('flex').attr('aria-hidden', 'false'); setTimeout(() => $('#fMode').trigger('focus'), 30);
+}
+function closeModal() { $('#modal').addClass('hidden').removeClass('flex').attr('aria-hidden', 'true'); if (lastFocus && lastFocus.focus) lastFocus.focus(); }
+
+function download(name, obj) {
+  const url = URL.createObjectURL(new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' }));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ---------- Events ---------- */
+$(function () {
+  document.title = APP_CONFIG.name; $('#appName').text(APP_CONFIG.name);
+  $('#footTxt').text(`${APP_CONFIG.name} · v${APP_CONFIG.version} · متوافق مع airOS status.cgi`);
+  applyTheme($('html').hasClass('dark'));
+
+  $('#btnTheme').on('click', () => { const dark = !$('html').hasClass('dark'); store.set('theme', dark ? 'dark' : 'light'); applyTheme(dark); });
+  $('#btnRefresh').on('click', () => refresh(true));
+  $('#btnSettings').on('click', openModal);
+  $(document).on('click', '.openSettings, #bannerSet', openModal);
+  $('#mClose').on('click', closeModal);
+  $('#modal').on('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+  $(document).on('keydown', (e) => { if (e.key === 'Escape' && !$('#modal').hasClass('hidden')) closeModal(); });
+  $('#fMode').on('change', syncFields);
+
+  $('#settingsForm').on('submit', (e) => {
+    e.preventDefault();
+    const mode = $('#fMode').val(), manual = $('#fManual').val().trim();
+    if (mode === 'manual') { try { JSON.parse(manual); } catch (err) { toast('JSON غير صالح', { type: 'error' }); return; } }
+    if (mode === 'api' && !$('#fUrl').val().trim()) { toast('أدخل عنوان API', { type: 'error' }); return; }
+    S.settings = Object.assign({}, S.settings, { mode, url: $('#fUrl').val().trim(), authHeader: $('#fAuthH').val().trim(), authValue: $('#fAuthV').val(), credentials: $('#fCred').is(':checked'), manualJson: manual, interval: clamp(parseInt($('#fInterval').val(), 10) || 0, 0, 3600) });
+    store.set('settings', S.settings); closeModal(); schedule(); S.error = null; S.data = null; refresh(true); toast('تم حفظ الإعدادات');
+  });
+
+  $('#btnClearHistory').on('click', () => { S.history = []; store.set('history', []); if (chart) { chart.destroy(); chart = null; } updateChart(); toast('تم مسح السجل'); });
+  $('#btnExport').on('click', () => {
+    const { authValue, ...safe } = S.settings;
+    download(`nano-monitor-${new Date().toISOString().slice(0, 10)}.json`, { app: APP_CONFIG.shortName, version: APP_CONFIG.version, exportedAt: new Date().toISOString(), settings: safe, history: S.history });
+    toast('تم تصدير البيانات');
+  });
+  $('#btnImport').on('click', () => $('#fImport').trigger('click'));
+  $('#fImport').on('change', function () {
+    const f = this.files[0]; if (!f) return;
+    const rd = new FileReader();
+    rd.onload = () => {
+      try {
+        const o = JSON.parse(rd.result);
+        if (!o || o.app !== APP_CONFIG.shortName || typeof o.settings !== 'object' || !Array.isArray(o.history)) throw new Error('bad');
+        S.settings = Object.assign({}, APP_CONFIG.defaults, o.settings, { authValue: S.settings.authValue });
+        S.history = o.history.filter((p) => p && isFinite(p.t)).slice(-APP_CONFIG.historyLimit);
+        store.set('settings', S.settings); store.set('history', S.history);
+        if (chart) { chart.destroy(); chart = null; }
+        schedule(); S.data = null; refresh(true); closeModal(); toast('تم استيراد البيانات');
+      } catch (err) { toast('ملف غير صالح', { type: 'error' }); }
+    };
+    rd.onerror = () => toast('تعذّرت قراءة الملف', { type: 'error' });
+    rd.readAsText(f); this.value = '';
+  });
+
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && Number(S.settings.interval) > 0 && S.settings.mode !== 'manual') refresh(false); });
+
+  /* PWA */
+  let deferred = null;
+  window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferred = e; $('#btnInstall').removeClass('hidden').addClass('flex'); });
+  $('#btnInstall').on('click', async () => { if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) {} deferred = null; $('#btnInstall').addClass('hidden').removeClass('flex'); });
+  window.addEventListener('appinstalled', () => { $('#btnInstall').addClass('hidden').removeClass('flex'); toast('تم تثبيت التطبيق'); });
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').then((reg) => {
+        reg.addEventListener('updatefound', () => {
+          const nw = reg.installing; if (!nw) return;
+          nw.addEventListener('statechange', () => { if (nw.state === 'installed' && navigator.serviceWorker.controller) toast('نسخة جديدة من التطبيق جاهزة', { sticky: true, action: { label: 'تحديث', fn: () => nw.postMessage('SKIP_WAITING') } }); });
+        });
+      }).catch(() => {});
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => { if (reloaded) return; reloaded = true; location.reload(); });
+    });
+  }
+
+  render(); refresh(false); schedule();
+});
+})();
+
+/*
+===== sw.js =====
+const CACHE_NAME = 'nano-monitor-v1.0.0';
+const SHELL = ['./', './nano-monitor.html', './manifest.webmanifest', './logo.jpg'];
+const CDN_HOSTS = ['cdn.tailwindcss.com', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
+
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE_NAME).then((c) => Promise.all(SHELL.map((u) => c.add(u).catch(() => {})))));
+});
+
+self.addEventListener('message', (e) => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
+  e.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  );
+});
+
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  // live device data must never be served from cache
+  if (/status\.cgi/.test(url.pathname)) return;
+  const sameOrigin = url.origin === self.location.origin;
+  const isShell = sameOrigin && (req.mode === 'navigate' || SHELL.some((p) => new URL(p, self.location.href).href === url.href));
+
+  if (isShell) {
+    // cache-first for the app shell
+    e.respondWith(
+      caches.match(req).then((hit) => hit || fetch(req).then((res) => {
+        if (res && res.ok) { const copy = res.clone(); caches.open(CACHE_NAME).then((c) => c.put(req, copy)); }
+        return res;
+      }))
+    );
+    return;
+  }
+
+  // network-first for everything else
+  e.respondWith(
+    fetch(req).then((res) => {
+      if (res && (res.ok || res.type === 'opaque') && (sameOrigin || CDN_HOSTS.indexOf(url.hostname) !== -1)) {
+        const copy = res.clone(); caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+      }
+      return res;
+    }).catch(() => caches.match(req))
+  );
+});
+
+===== manifest.webmanifest =====
+{
+  "name": "مراقب النانو - Nano Monitor",
+  "short_name": "Nano Monitor",
+  "description": "لوحة مبسّطة لمراقبة إشارة وجودة ارتباط أجهزة Ubiquiti airOS",
+  "start_url": "./nano-monitor.html",
+  "scope": "./",
+  "display": "standalone",
+  "dir": "rtl",
+  "lang": "ar",
+  "background_color": "#f8fafc",
+  "theme_color": "#4f46e5",
+  "icons": [
+    { "src": "logo.jpg", "sizes": "192x192", "type": "image/jpeg", "purpose": "any" },
+    { "src": "logo.jpg", "sizes": "512x512", "type": "image/jpeg", "purpose": "any" }
+  ]
+}
+*/
+</script>
+</body>
+</html>
