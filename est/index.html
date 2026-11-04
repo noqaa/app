@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>اشتراكي نت</title>
+<meta name="theme-color" content="#f0f9ff">
+<script>(function(){var t=null;try{t=JSON.parse(localStorage.getItem('eshtiraki:theme'))}catch(e){}var d=t?t==='dark':window.matchMedia('(prefers-color-scheme: dark)').matches;var r=document.documentElement;r.classList.toggle('dark',d);r.style.colorScheme=d?'dark':'light';document.querySelector('meta[name=theme-color]').content=d?'#09090b':'#f0f9ff'})()</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Tajawal','sans-serif']},colors:{accent:{50:'#f0f9ff',100:'#e0f2fe',400:'#38bdf8',500:'#0ea5e9',600:'#0284c7',700:'#0369a1'}}}}}</script>
+<style>
+html{background:#f8fafc}html.dark{background:#09090b}
+body{position:relative;z-index:0;min-height:100dvh;background:#f8fafc;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+html.dark body{background:#09090b}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(60% 40% at 85% 0%,rgba(14,165,233,.16),transparent),radial-gradient(50% 35% at 0% 100%,rgba(16,185,129,.10),transparent)}
+.mi{font-family:'Material Symbols Rounded';font-weight:normal;font-style:normal;line-height:1;display:inline-block;font-size:24px;font-feature-settings:'liga'}
+*{-webkit-tap-highlight-color:transparent}
+.ltr{direction:ltr;unicode-bidi:isolate;display:inline-block}
+.chev{transition:transform .2s}.open .chev{transform:rotate(180deg)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="logo.jpg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+</head>
+<body class="font-sans text-slate-800 dark:text-zinc-100 antialiased">
+<header class="sticky top-0 z-30 backdrop-blur bg-slate-50/85 dark:bg-zinc-950/85 border-b border-slate-200/70 dark:border-zinc-800">
+  <div class="max-w-xl mx-auto flex items-center gap-1 px-3 h-14">
+    <span class="size-9 grid place-items-center rounded-xl bg-accent-500 text-white mx-1"><span class="mi">cell_tower</span></span>
+    <h1 class="font-extrabold text-lg flex-1" id="appName"></h1>
+    <button id="btnRefresh" class="hidden size-11 place-items-center rounded-xl hover:bg-slate-200/70 dark:hover:bg-zinc-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500" aria-label="تحديث"><span id="rfIcon" class="mi">refresh</span></button>
+    <button id="btnShare" class="hidden size-11 place-items-center rounded-xl hover:bg-slate-200/70 dark:hover:bg-zinc-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500" aria-label="مشاركة"><span class="mi">share</span></button>
+    <button id="btnTheme" class="size-11 grid place-items-center rounded-xl hover:bg-slate-200/70 dark:hover:bg-zinc-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500" aria-label="تبديل المظهر"><span id="themeIcon" class="mi">dark_mode</span></button>
+    <button id="btnMenu" class="size-11 grid place-items-center rounded-xl hover:bg-slate-200/70 dark:hover:bg-zinc-800 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500" aria-label="الإعدادات"><span class="mi">settings</span></button>
+  </div>
+</header>
+
+<main class="max-w-xl mx-auto px-4 pt-4 pb-10">
+  <section id="splash" class="grid place-items-center py-32 text-slate-500 dark:text-zinc-400">
+    <span class="mi animate-spin !text-4xl text-accent-500">progress_activity</span>
+    <p class="mt-3 text-sm" id="splashTxt">جارٍ الاتصال بالنانو...</p>
+  </section>
+
+  <section id="login" class="hidden pt-6">
+    <div class="text-center mb-6">
+      <div class="size-16 mx-auto grid place-items-center rounded-3xl bg-gradient-to-br from-accent-400 to-accent-600 text-white shadow-lg shadow-accent-500/30"><span class="mi !text-4xl">wifi_tethering</span></div>
+      <h2 class="mt-4 text-2xl font-extrabold">تسجيل الدخول للنانو</h2>
+      <p class="mt-1 text-sm text-slate-500 dark:text-zinc-400">أدخل بيانات جهاز النانو مرة واحدة، وسيتذكرها التطبيق.</p>
+    </div>
+    <form id="loginForm" class="rounded-2xl bg-white/90 dark:bg-zinc-900/80 border border-slate-200/70 dark:border-zinc-800 shadow-sm p-4 space-y-4" novalidate>
+      <div><div class="flex items-center justify-between gap-2"><label for="fIp" class="text-sm font-bold shrink-0">عنوان IP للنانو</label><div dir="ltr" class="flex min-w-0 overflow-x-auto" style="scrollbar-width:none"><button type="button" data-ip="192.168.1.1" class="ipChip shrink-0 min-h-[44px] px-2 text-xs font-bold text-accent-600 dark:text-accent-400 active:opacity-60">192.168.1.1</button><button type="button" data-ip="192.168.1.20" class="ipChip shrink-0 min-h-[44px] px-2 text-xs font-bold text-accent-600 dark:text-accent-400 active:opacity-60">192.168.1.20</button><button type="button" data-ip="192.168.0.1" class="ipChip shrink-0 min-h-[44px] px-2 text-xs font-bold text-accent-600 dark:text-accent-400 active:opacity-60">192.168.0.1</button></div></div>
+        <input id="fIp" inputmode="decimal" autocomplete="off" dir="ltr" placeholder="192.168.1.1" class="mt-1 w-full h-12 px-3 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-accent-500 text-left"></div>
+      <label class="block"><span class="text-sm font-bold">اسم المستخدم</span>
+        <input id="fUser" autocomplete="off" autocapitalize="none" dir="ltr" class="mt-1 w-full h-12 px-3 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-accent-500 text-left"></label>
+      <label class="block"><span class="text-sm font-bold">كلمة المرور</span>
+        <div class="relative mt-1"><input id="fPass" type="password" autocomplete="off" dir="ltr" class="w-full h-12 px-3 pe-12 rounded-xl border border-slate-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 focus:outline-none focus:ring-2 focus:ring-accent-500 text-left">
+        <button type="button" id="togglePass" class="absolute inset-y-0 end-0 w-12 grid place-items-center text-slate-500" aria-label="إظهار كلمة المرور"><span class="mi">visibility</span></button></div></label>
+      <p id="loginErr" class="hidden text-sm rounded-xl px-3 py-2 bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300"></p>
+      <button id="btnLogin" class="w-full h-12 rounded-xl bg-accent-600 hover:bg-accent-700 active:scale-[.99] text-white font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-accent-500 flex items-center justify-center gap-2">دخول</button>
+    </form>
+  </section>
+
+  <section id="home" class="hidden space-y-4"></section>
+</main>
+
+<div id="modal" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm items-end sm:items-center justify-center p-3" role="dialog" aria-modal="true">
+  <div class="w-full max-w-md max-h-[90dvh] overflow-auto rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-xl p-4 space-y-3">
+    <div class="flex items-center"><h3 class="font-extrabold text-lg flex-1">الإعدادات والبيانات</h3>
+      <button id="mClose" class="size-11 grid place-items-center rounded-xl hover:bg-slate-100 dark:hover:bg-zinc-800" aria-label="إغلاق"><span class="mi">close</span></button></div>
+    <div><div class="text-sm font-bold mb-1.5">سرعة التحديث</div><div class="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-zinc-800"><button data-ms="1000" class="pollBtn h-12 rounded-xl text-sm font-bold leading-tight transition">سريع<span class="block text-[11px] font-medium opacity-70">كل ثانية</span></button><button data-ms="2000" class="pollBtn h-12 rounded-xl text-sm font-bold leading-tight transition">متوسط<span class="block text-[11px] font-medium opacity-70">كل ثانيتين</span></button><button data-ms="5000" class="pollBtn h-12 rounded-xl text-sm font-bold leading-tight transition">متوازن<span class="block text-[11px] font-medium opacity-70">كل 5 ثوانٍ</span></button></div></div>
+    <p class="text-sm text-slate-500 dark:text-zinc-400">صدّر بيانات الدخول كنسخة احتياطية، أو الصق نسخة سابقة واضغط استيراد.</p>
+    <textarea id="mData" rows="5" dir="ltr" class="w-full p-3 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-950 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-accent-500" placeholder="{ }"></textarea>
+    <div class="grid grid-cols-2 gap-2">
+      <button id="mExport" class="h-11 rounded-xl bg-accent-600 text-white font-bold flex items-center justify-center gap-1"><span class="mi !text-xl">upload</span>تصدير JSON</button>
+      <button id="mImport" class="h-11 rounded-xl bg-accent-100 text-accent-700 dark:bg-accent-500/15 dark:text-accent-400 font-bold flex items-center justify-center gap-1"><span class="mi !text-xl">download</span>استيراد JSON</button>
+    </div>
+    <label class="block h-11 rounded-xl border border-dashed border-slate-300 dark:border-zinc-700 grid place-items-center text-sm cursor-pointer"><span>اختيار ملف JSON</span><input id="mFile" type="file" accept="application/json,.json" class="hidden"></label>
+    <button id="mLogout" class="w-full h-11 rounded-xl bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300 font-bold flex items-center justify-center gap-1"><span class="mi !text-xl">logout</span>تسجيل الخروج</button>
+    <p id="mVer" class="text-center text-xs text-slate-400"></p>
+  </div>
+</div>
+<div id="toasts" class="fixed inset-x-0 bottom-0 z-50 flex flex-col items-center gap-2 p-4 pointer-events-none" style="padding-bottom:calc(1rem + env(safe-area-inset-bottom))"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+const APP_CONFIG={name:'اشتراكي نت',version:'1.0.0',accent:'sky',prefix:'eshtiraki:',pollMs:2000};
+if(!window.jQuery){document.body.innerHTML='<p style="padding:2rem;text-align:center">تعذر تحميل مكتبات الصفحة. تحقق من الإنترنت ثم أعد فتح التطبيق.</p>'}else $(function(){
+const store={get(k,d){try{const v=localStorage.getItem(APP_CONFIG.prefix+k);return v===null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem(APP_CONFIG.prefix+k,JSON.stringify(v))}catch(e){}}};
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CARD='rounded-3xl bg-white/90 dark:bg-zinc-900/80 border border-slate-200/70 dark:border-zinc-800 shadow-sm';
+
+/* ---------- Native bridge (window.Android) ---------- */
+const pend={};let seq=1;
+window.onNative=(id,ok,payload)=>{const p=pend[id];if(!p)return;delete pend[id];let d=payload;try{if(typeof payload==='string')d=JSON.parse(payload)}catch(e){}ok?p.res(d):p.rej(d&&typeof d==='object'?d:{message:String(d)})};
+function call(method,args){return new Promise((res,rej)=>{
+  if(!window.Android||!window.Android.request)return mock(method,args||{}).then(res,rej);
+  const id=seq++;let t=setTimeout(()=>{delete pend[id];rej({code:'TIMEOUT',message:'انتهت مهلة الاتصال. تأكد من الـ IP وأن الراوتر متصل.'})},25000);
+  pend[id]={res:v=>{clearTimeout(t);res(v)},rej:e=>{clearTimeout(t);rej(e)}};
+  try{window.Android.request(id,method,JSON.stringify(args||{}))}catch(e){clearTimeout(t);delete pend[id];rej({code:'BRIDGE',message:'تعذر الوصول إلى الجسر'})}
+})}
+/* Browser preview only (no Android bridge) */
+const MOCK_USER={serviceStatusColor:{visible:true,value:'Green'},accountPrice:{visible:true,displayName:'سعر الاشتراك',value:'40,000 IQD'},accountStatus:{visible:true,displayName:'حالة الاشتراك',value:'فعال'},accountName:{visible:true,displayName:'نوع الاشتراك',value:'Plus'},fullName:{visible:true,displayName:'الاسم الكامل',value:' '},userID:{visible:true,displayName:'اسم المستخدم',value:'em@sa39'},agentName:{visible:true,displayName:'اسم الوكيل',value:'LqBaji7'},accountExpirationDate:{visible:true,displayName:'تاريخ نفاذ الصلاحية',value:'16/11/2026 06:30:00 م'},activeDaysLeft:{visible:true,displayName:'الايام المتبقية',value:'13'},userIP:{visible:true,displayName:'عنوان IP',value:'100.105.31.12'},mobileNumber:{visible:true,displayName:'رقم الهاتف',value:null}};
+const MOCK_ST={host:{uptime:878666,time:'2026-11-04 20:29:20',fwversion:'v6.1.7',hostname:'PowerBeam M5 400',devmodel:'PowerBeam M5 400',netrole:'router',totalram:63606784,freeram:37158912,cpuload:2},wireless:{mode:'sta',essid:'NSHWAN (V30)07805748874',apmac:'68:D7:9A:A8:AF:B1',channel:92,frequency:'5460 MHz',opmode:'11NAHT20',antenna:'400 - 25 dBi',signal:-47,rssi:49,noisef:-97,txpower:26,ack:35,distance:1650,ccq:837,txrate:'26',rxrate:'117',polling:{enabled:1,quality:64,capacity:39},stats:{tx_retries:0,missed_beacons:0},chwidth:20,chainrssi:[50,24,0]},interfaces:[{ifname:'eth0',hwaddr:'18:E8:29:DD:F9:B6',status:{plugged:1,speed:100,duplex:1}}]};
+const mock=(m,a)=>new Promise((res,rej)=>setTimeout(()=>{
+  if(m==='getUserData')return res(MOCK_USER);
+  if(m==='nanoLogin')return a.password?res({ok:true}):rej({code:'AUTH',message:'كلمة المرور غير صحيحة'});
+  if(m==='nanoStatus'){const s=JSON.parse(JSON.stringify(MOCK_ST));s.wireless.signal+=Math.round(Math.random()*4-2);return res(s)}
+  if(m==='share'){try{navigator.share?navigator.share({text:a.text}):navigator.clipboard.writeText(a.text)}catch(e){}}
+  res({ok:true})},300));
+
+/* ---------- Rules: thresholds, wording and suggested fixes ---------- */
+const LV=[
+ {chip:'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',txt:'text-emerald-600 dark:text-emerald-400',box:'',bar:'#10b981',ic:'check_circle'},
+ {chip:'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',txt:'text-amber-600 dark:text-amber-400',box:'bg-amber-50 text-amber-800 dark:bg-amber-500/10 dark:text-amber-200',bar:'#f59e0b',ic:'warning'},
+ {chip:'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300',txt:'text-red-600 dark:text-red-400',box:'bg-red-50 text-red-800 dark:bg-red-500/10 dark:text-red-200',bar:'#ef4444',ic:'error'}];
+const W=s=>s.wireless,P=s=>s.wireless.polling||{},ch=s=>(W(s).chainrssi||[]).slice(0,2);
+const eth=s=>(s.interfaces||[]).find(i=>i.ifname==='eth0');
+const METRICS=[
+ {id:'signal',term:'dBm',label:'قوة الإشارة',icon:'signal_cellular_alt',unit:'dBm',get:s=>W(s).signal,hi:1,t:[-65,-75],range:'الجيد أقوى من -65 · المتوسط حتى -75',txt:['قوية','متوسطة','ضعيفة'],
+  fix:['','الإشارة مقبولة. حرّك الصحن قليلاً جداً باتجاه البرج حتى يقترب الرقم من الصفر (مثلاً من -70 إلى -60).','الإشارة ضعيفة. تأكد أن الصحن موجّه للبرج وبدون عوائق (أشجار أو مبانٍ)، وحرّكه ببطء. إذا لم تتحسن اتصل بصاحب البرج.']},
+ {id:'snr',term:'SNR',label:'نقاء الإشارة',icon:'graphic_eq',unit:'dB',get:s=>W(s).signal-W(s).noisef,hi:1,t:[30,20],range:'الجيد أعلى من 30 · المتوسط حتى 20',txt:['نقية','متوسطة','مشوشة'],
+  fix:['','يوجد بعض التشويش. إذا كان السرعة بطيئة أخبر صاحب البرج ليغيّر القناة.','التشويش عالٍ والإشارة ضعيفة مقارنة بالضوضاء. حسّن توجيه الصحن أو اطلب من صاحب البرج تغيير القناة.']},
+ {id:'chains',term:'Chain',label:'توازن الهوائيين',icon:'compare_arrows',unit:'dB',get:s=>{const c=ch(s);return c.length<2?null:Math.abs(c[0]-c[1])},show:(v,s)=>v,hi:0,t:[8,15],range:'الجيد فرق أقل من 8 · المتوسط حتى 15',txt:['متوازن','فرق بسيط','غير متوازن'],
+  extra:s=>{const c=ch(s);return c.length<2?'':'Chain0: '+(c[0]-96)+' · Chain1: '+(c[1]-96)+' dBm'},
+  fix:['','يوجد فرق بسيط بين الهوائيين. حرّك الصحن بشكل طفيف.','الفرق كبير بين الهوائيين، وهذا يعني غالباً أن الصحن مائل أو غير مضبوط. أعد تثبيته مستقيماً وحرّكه قليلاً حتى يتقارب الرقمان.']},
+ {id:'ccq',term:'CCQ',label:'جودة الاتصال',icon:'verified',unit:'%',get:s=>Math.round(W(s).ccq/10),hi:1,t:[85,70],range:'الجيد أعلى من 85 · المتوسط حتى 70',txt:['ممتازة','متوسطة','ضعيفة'],
+  fix:['','الاتصال مقبول لكن قد تلاحظ تقطعاً بسيطاً. جرّب تحريك الصحن قليلاً.','الاتصال غير مستقر. افحص توجيه الصحن والكيبل، ثم اتصل بصاحب البرج.']},
+ {id:'quality',term:'airMAX Quality',label:'جودة airMAX',icon:'speed',unit:'%',get:s=>P(s).enabled?P(s).quality:null,hi:1,t:[70,50],range:'الجيد أعلى من 70 · المتوسط حتى 50',txt:['جيدة','متوسطة','ضعيفة'],
+  fix:['','الجودة متوسطة. قد يتحسن الأمر بضبط الصحن.','الجودة ضعيفة. أخبر صاحب البرج، أو راجع توجيه الصحن.']},
+ {id:'capacity',term:'airMAX Capacity',label:'سعة airMAX',icon:'data_usage',unit:'%',get:s=>P(s).enabled?P(s).capacity:null,hi:1,t:[60,35],range:'الجيد أعلى من 60 · المتوسط حتى 35',txt:['عالية','متوسطة','منخفضة'],
+  fix:['','السعة متوسطة، وقد تقل السرعة وقت الزحام.','السعة منخفضة، قد تكون السرعة بطيئة. اسأل صاحب البرج عن الضغط على السكتر.']},
+ {id:'tx',term:'TX',label:'سرعة الإرسال',icon:'north',unit:'Mbps',get:s=>+W(s).txrate,hi:1,t:[65,26],range:'الجيد أعلى من 65 · المتوسط حتى 26',txt:['جيدة','متوسطة','ضعيفة'],
+  fix:['','سرعة الإرسال متوسطة، وتتحسن عادةً مع تحسن الإشارة.','سرعة الإرسال ضعيفة. حسّن توجيه الصحن.']},
+ {id:'rx',term:'RX',label:'سرعة الاستقبال',icon:'south',unit:'Mbps',get:s=>+W(s).rxrate,hi:1,t:[65,26],range:'الجيد أعلى من 65 · المتوسط حتى 26',txt:['جيدة','متوسطة','ضعيفة'],
+  fix:['','سرعة الاستقبال متوسطة، وتتحسن عادةً مع تحسن الإشارة.','سرعة الاستقبال ضعيفة. حسّن توجيه الصحن.']},
+ {id:'beacon',term:'Missed Beacons',label:'انقطاعات الإشارة',icon:'wifi_off',unit:'',get:s=>(W(s).stats||{}).missed_beacons,hi:0,t:[2,10],range:'الجيد 0 إلى 2',txt:['لا يوجد','قليلة','كثيرة'],
+  fix:['','توجد انقطاعات قليلة، راقبها.','انقطاعات كثيرة: الإشارة غير مستقرة. افحص الصحن والكيبل.']},
+ {id:'cpu',term:'CPU',label:'حِمل المعالج',icon:'memory',unit:'%',get:s=>s.host.cpuload,hi:0,t:[60,85],range:'الجيد أقل من 60',txt:['طبيعي','مرتفع','عالٍ جداً'],
+  fix:['','المعالج مشغول قليلاً، لا يستدعي القلق.','المعالج مشغول جداً. أعد تشغيل الجهاز بفصل الكهرباء وتوصيلها.']},
+ {id:'eth',term:'Ethernet',label:'سرعة كيبل الشبكة',icon:'cable',unit:'Mbps',get:s=>{const e=eth(s);return e?e.status.plugged?e.status.speed:0:null},hi:1,t:[100,10],range:'الجيد 100 فما فوق',txt:['سليم','بطيء','غير متصل'],
+  fix:['','الكيبل يعمل بسرعة منخفضة، وقد يكون تالفاً. جرّب كيبلاً آخر.','الكيبل غير متصل. تأكد من تثبيت الكيبل بين الجهاز والراوتر.']}
+];
+const M={};METRICS.forEach(m=>M[m.id]=m);
+const rate=(m,v)=>m.hi?(v>=m.t[0]?0:v>=m.t[1]?1:2):(v<=m.t[0]?0:v<=m.t[1]?1:2);
+const val=(m,s)=>{try{const v=m.get(s);return v==null||isNaN(v)?null:v}catch(e){return null}};
+const fmtUp=sec=>{const d=Math.floor(sec/86400),h=Math.floor(sec%86400/3600),m=Math.floor(sec%3600/60);return d?`${d} يوم و${h} ساعة`:h?`${h} ساعة و${m} دقيقة`:`${m} دقيقة`};
+const INFO=[
+ ['signal_cellular_alt','المحطة (Mode)','Mode',s=>({sta:'Station (مشترك)',ap:'Access Point'}[W(s).mode]||W(s).mode)],
+ ['router','MAC للبرج','AP MAC',s=>W(s).apmac],
+ ['radio','التردد','Frequency',s=>W(s).frequency],
+ ['tune','القناة','Channel',s=>W(s).channel],
+ ['width_normal','عرض القناة','Width',s=>W(s).chwidth?W(s).chwidth+' MHz':null],
+ ['straighten','المسافة عن البرج','Distance',s=>W(s).distance!=null?(W(s).distance>=1000?(W(s).distance/1000).toFixed(2)+' km':W(s).distance+' m'):null],
+ ['timer','زمن الاستجابة','ACK',s=>W(s).ack!=null?W(s).ack+' µs':null],
+ ['bolt','قدرة الإرسال','TX Power',s=>W(s).txpower!=null?W(s).txpower+' dBm':null],
+ ['settings_input_antenna','الهوائي','Antenna',s=>W(s).antenna]];
+const INFO2=[
+ ['devices','الجهاز','Model',s=>s.host.devmodel||s.host.hostname],
+ ['system_update','البرنامج','Firmware',s=>s.host.fwversion],
+ ['schedule','مدة التشغيل','Uptime',s=>s.host.uptime!=null?fmtUp(s.host.uptime):null],
+ ['sd_card','الذاكرة المستخدمة','RAM',s=>s.host.totalram?Math.round((1-s.host.freeram/s.host.totalram)*100)+'%':null],
+ ['lan','عنوان MAC','MAC',s=>(eth(s)||{}).hwaddr]];
+
+/* ---------- State & views ---------- */
+const S={c:null,user:null,st:null,on:false,open:{},sub:false,uState:'load',uTry:0,tile:''};
+const badge=t=>`<span dir="ltr" class="inline-block px-1.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700">${esc(t)}</span>`;
+const chipIc=(ic,cls)=>`<span class="size-10 shrink-0 grid place-items-center rounded-full ${cls}"><span class="mi">${ic}</span></span>`;
+const EXTRA={
+ signal:{who:'u',what:'قوة الإشارة التي يستقبلها الصحن من برج الإنترنت. كلما اقترب الرقم من الصفر كانت أقوى (-50 أفضل من -80).'},
+ snr:{who:'b',what:'الفرق بين الإشارة والتشويش حولها. كلما ارتفع الرقم كان الاتصال أنقى.'},
+ chains:{who:'u',what:'للصحن هوائيان داخليان ويفترض أن يستقبلا إشارة متقاربة. الفرق الكبير يعني أن الصحن غير موجّه بدقة.'},
+ ccq:{who:'b',what:'نسبة نجاح نقل البيانات بينك وبين البرج. كلما ارتفعت قلّ التقطع.'},
+ quality:{who:'t',what:'جودة تنظيم الاتصال الذي يديره البرج لجميع المشتركين.'},
+ capacity:{who:'t',what:'ما يستطيع البرج تقديمه لك من سرعة حالياً. تنخفض عند ازدحام المشتركين على السكتر.'},
+ tx:{who:'b',what:'سرعة الارتباط اللاسلكي من جهازك نحو البرج (الرفع). ليست سرعة الإنترنت الفعلية.'},
+ rx:{who:'b',what:'سرعة الارتباط اللاسلكي من البرج نحو جهازك (التنزيل). ليست سرعة الإنترنت الفعلية.'},
+ beacon:{who:'b',what:'عدد المرات التي فقد فيها جهازك إشارة التعريف الدورية من البرج.'},
+ cpu:{who:'u',what:'مقدار انشغال معالج الجهاز. ارتفاعه الدائم قد يبطئ الاتصال.'},
+ eth:{who:'u',what:'سرعة الوصلة بين النانو والراوتر عبر الكيبل. الطبيعي 100 Mbps.'}};
+const WHO={u:['person','منك','الحل بيدك: الصحن أو الكيبل أو الجهاز'],t:['cell_tower','من البرج','الحل عند صاحب البرج، اتصل به'],b:['sync_alt','منك ومن البرج','قد يكون السبب عندك أو عند البرج']};
+const bandsOf=m=>{const[a,b]=m.t;return m.hi?[a+' أو أعلى','من '+b+' إلى '+a,'أقل من '+b]:[a+' أو أقل','من '+a+' إلى '+b,'أكثر من '+b]};
+function detail(id,s,show){const m=M[id],v=val(m,s),l=rate(m,v),x=EXTRA[id]||{},w=WHO[x.who||'b'];
+ return `<div class="${(show===undefined?S.open[id]:show)?'':'hidden '}m-panel px-4 pb-4 space-y-3 text-sm"><p class="leading-relaxed text-slate-600 dark:text-zinc-300">${x.what||''}</p>
+ ${m.extra?`<div dir="ltr" class="text-xs text-slate-500 text-right">${esc(m.extra(s))}</div>`:''}
+ <div class="space-y-1">${bandsOf(m).map((r,i)=>`<div class="flex items-center gap-2 rounded-lg px-2.5 py-2 ${i===l?LV[i].chip+' font-bold':''}"><span class="size-2.5 rounded-full shrink-0" style="background:${LV[i].bar}"></span><span class="flex-1">${m.txt[i]}${i===l?' (قراءتك)':''}</span><span class="text-xs ltr">${r} ${m.unit}</span></div>`).join('')}</div>
+ ${l?`<div class="rounded-xl px-3 py-2.5 ${LV[l].box}"><div class="font-bold mb-1 flex items-center gap-1"><span class="mi !text-lg">lightbulb</span>الحل المقترح</div><p class="leading-relaxed">${m.fix[l]}</p><div class="mt-2 flex items-center gap-1 text-xs"><span class="mi !text-base">${w[0]}</span><b>المسؤول: ${w[1]}</b> — ${w[2]}</div></div>`:`<div class="rounded-xl px-3 py-2.5 flex items-center gap-1 font-bold ${LV[0].chip}"><span class="mi !text-lg">check_circle</span>كل شيء سليم، لا يحتاج لأي تعديل</div>`}</div>`}
+function metricRow(id,s){const m=M[id],v=val(m,s);if(v==null)return'';const l=rate(m,v),L=LV[l],o=!!S.open[id];
+ return `<div><button data-m="${id}" aria-expanded="${o}" class="${o?'open ':''}w-full min-h-[60px] px-4 py-3 flex items-center gap-3 text-start hover:bg-slate-50 dark:hover:bg-zinc-800/50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-500">${chipIc(m.icon,L.chip)}<div class="flex-1 min-w-0 flex items-center gap-2 flex-wrap"><span class="font-bold text-sm">${m.label}</span>${badge(m.term)}</div><div class="text-end shrink-0"><div class="font-extrabold text-lg leading-none ${L.txt}"><span class="ltr">${v}</span> <span class="text-xs font-medium text-slate-400">${m.unit}</span></div><div class="text-xs font-bold mt-1 ${L.txt}">${m.txt[l]}</div></div><span class="mi chev text-slate-400 !text-xl">expand_more</span></button>${detail(id,s)}</div>`}
+function infoRow(r,s){let v;try{v=r[3](s)}catch(e){}if(v==null||v==='')return'';
+ return `<div class="px-4 py-3 flex items-center gap-3">${chipIc(r[0],'bg-accent-100 text-accent-700 dark:bg-accent-500/15 dark:text-accent-400')}<div class="flex-1 min-w-0 flex items-center gap-2 flex-wrap"><span class="font-bold text-sm">${r[1]}</span>${badge(r[2])}</div><span class="ltr text-sm font-bold text-slate-700 dark:text-zinc-200 text-end break-all">${esc(v)}</span></div>`}
+const group=(title,ic,rows,b)=>rows?`<section class="${CARD} overflow-hidden"><h3 class="px-4 pt-3 pb-1 flex items-center gap-2 font-extrabold"><span class="mi text-accent-600 dark:text-accent-400">${ic}</span>${title}${b||''}</h3><div class="divide-y divide-slate-100 dark:divide-zinc-800">${rows}</div></section>`:'';
+
+const MON=['كانون الثاني','شباط','آذار','نيسان','أيار','حزيران','تموز','آب','أيلول','تشرين الأول','تشرين الثاني','كانون الأول'],DAYN=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+function parseExp(v){const m=/^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*([صم])?/.exec(String(v));if(!m)return null;const d=+m[1],mo=+m[2],y=+m[3];if(mo<1||mo>12||d<1||d>31)return null;
+ return{day:DAYN[new Date(y,mo-1,d).getDay()],date:d+' '+MON[mo-1]+' '+y,short:d+' '+MON[mo-1],time:(+m[4])+':'+m[5]+(m[6]==='م'?' مساءً':m[6]==='ص'?' صباحاً':'')}}
+function subCard(u){if(!u)return'';
+ const f=k=>{const x=u[k];return x&&x.visible!==false&&x.value!=null&&String(x.value).trim()!==''?x:null};
+ const ex=f('accountExpirationDate'),px=ex?parseExp(ex.value):null;
+ const days=f('activeDaysLeft')?parseInt(f('activeDaysLeft').value,10):null;
+ const dl=days==null||isNaN(days)?null:days;const dl_l=dl==null?0:dl>7?0:dl>=3?1:2;
+ const sc=(f('serviceStatusColor')||{value:''}).value.toLowerCase();const sl=sc==='green'?0:sc==='red'?2:sc?1:dl_l;
+ const L=LV[sl],LD=LV[dl_l];
+ const more=['fullName','userID','agentName','accountPrice','userIP','mobileNumber','address','email','city'].map(k=>f(k)).filter(Boolean)
+  .map(x=>`<div class="min-w-0"><div class="text-xs text-slate-500 dark:text-zinc-400">${esc(x.displayName||'')}</div><div class="font-bold text-sm break-words">${esc(String(x.value).trim())}</div></div>`).join('');
+ const img=f('accountImagePath');
+ return `<section id="subCard" class="${CARD} overflow-hidden${S.sub?' open':''}"><button id="subToggle" aria-expanded="${!!S.sub}" class="w-full p-4 flex items-center gap-3 text-start focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent-500">
+  ${img?`<img src="${esc(img.value)}" alt="" class="size-12 rounded-xl object-contain bg-slate-100 dark:bg-zinc-800" onerror="this.remove()">`:chipIc('workspace_premium',L.chip)}
+  <div class="flex-1 min-w-0"><div class="text-xs text-slate-500 dark:text-zinc-400">${esc((f('accountName')||{}).displayName||'نوع الاشتراك')}</div><div class="font-extrabold text-lg truncate">${esc((f('accountName')||{value:'—'}).value)}</div>
+  <div class="mt-1 flex items-center gap-2 flex-wrap">${f('accountStatus')?`<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold ${L.chip}"><span class="mi !text-sm">${L.ic}</span>${esc(f('accountStatus').value)}</span>`:''}${f('accountExpirationDate')?`<span class="text-xs text-slate-500 dark:text-zinc-400">ينتهي <span class="${px?'':'ltr'}">${esc(px?px.short:ex.value)}</span></span>`:''}</div></div>
+  ${dl!=null?`<div class="text-center shrink-0"><div class="text-3xl font-extrabold leading-none ${LD.txt}">${dl}</div><div class="text-xs text-slate-500 dark:text-zinc-400 mt-1">يوم متبقي</div></div>`:''}
+  <span class="mi chev text-slate-400">expand_more</span></button>
+  ${dl!=null?`<div class="mx-4 mb-4 -mt-1 h-2 rounded-full bg-slate-100 dark:bg-zinc-800 overflow-hidden"><div class="h-full rounded-full transition-all" style="width:${Math.max(4,Math.min(100,dl/30*100))}%;background:${LD.bar}"></div></div>`:''}
+  <div id="subMore" class="${S.sub?'':'hidden '}border-t border-slate-100 dark:border-zinc-800 px-4 py-3 grid grid-cols-2 gap-3">${more}${f('accountExpirationDate')?`<div class="col-span-2 min-w-0"><div class="text-xs text-slate-500 dark:text-zinc-400">${esc(f('accountExpirationDate').displayName||'')}</div>${px?`<div class="mt-1 flex flex-wrap gap-2"><span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-sm font-bold"><span class="mi !text-base text-accent-600 dark:text-accent-400">event</span>${px.day} ${px.date}</span><span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-zinc-800 text-sm font-bold"><span class="mi !text-base text-accent-600 dark:text-accent-400">schedule</span>${px.time}</span></div>`:`<div class="font-bold text-sm">${esc(ex.value)}</div>`}</div>`:''}</div></section>`}
+
+function userBlock(){if(S.uState==='ok'&&S.user)return subCard(S.user);const err=S.uState==='err';
+ return `<section class="${CARD} p-4 flex items-center gap-3">${chipIc(err?'cloud_off':'hourglass_top','bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-zinc-400')}<div class="flex-1 min-w-0"><div class="font-bold text-sm">${err?'تعذر تحميل معلومات الاشتراك':'جارٍ تحميل معلومات الاشتراك...'}</div>${err?'<div class="text-xs text-slate-500 dark:text-zinc-400 mt-0.5 leading-relaxed">لا يؤثر هذا على قراءات الإشارة، فمصدر المعلومتين مختلف.</div>':''}</div>${err?'<button id="uRetry" class="h-11 px-4 rounded-full bg-accent-100 text-accent-700 dark:bg-accent-500/15 dark:text-accent-400 text-sm font-bold">إعادة المحاولة</button>':''}</section>`}
+const gp=(f,r)=>{const a=(135+270*f)*Math.PI/180;return[(120+r*Math.cos(a)).toFixed(1),(120+r*Math.sin(a)).toFixed(1)]};
+const arc=(f0,f1,r)=>{const p=gp(f0,r),q=gp(f1,r);return `M${p[0]} ${p[1]}A${r} ${r} 0 ${(f1-f0)*270>180?1:0} 1 ${q[0]} ${q[1]}`};
+const gb=(ids,s)=>{let n=0,w=0;ids.forEach(id=>{const v=val(M[id],s);if(v==null)return;const l=rate(M[id],v);if(l){n++;w=Math.max(w,l)}});return n?`<span class="ms-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${LV[w].chip}"><span class="mi !text-sm">${LV[w].ic}</span>${w===2?'مشكلة':'ملاحظة'}${n>1?' ('+n+')':''}</span>`:''};
+const TL=['snr','ccq','chains'];
+function tile(id,s){const m=M[id],v=val(m,s);if(v==null)return'';const l=rate(m,v),L=LV[l],on=S.tile===id;
+ return `<button data-t="${id}" aria-pressed="${on}" aria-label="${m.label}" class="min-w-0 rounded-2xl px-2 py-3 text-center transition ${on?'ring-2 ring-accent-500 ':''}bg-white/80 dark:bg-zinc-800/70 border border-slate-200/70 dark:border-zinc-700/60 focus:outline-none">${badge(m.term)}<div class="mt-2 font-extrabold text-xl leading-none ${L.txt}"><span class="ltr">${v}</span><span class="text-[10px] font-medium text-slate-400 ms-0.5">${m.unit}</span></div><div class="mt-2 inline-flex flex-wrap justify-center items-center gap-0.5 px-2 py-0.5 rounded-full text-[11px] font-bold ${L.chip}">${l?`<span class="mi !text-[13px]">${L.ic}</span>`:''}${m.txt[l]}</div></button>`}
+function hero(s){const m=M.signal,v=val(m,s);if(v==null)return'';const l=rate(m,v),L=LV[l],o=!!S.open.signal,vt=['إشارتك ممتازة','إشارتك مقبولة','إشارتك ضعيفة'][l];
+ const f=Math.max(.02,Math.min(1,(v+95)/60)),k=gp(f,92),tl=TL.filter(i=>val(M[i],s)!=null),tm=tl.includes(S.tile)?M[S.tile]:null;
+ return `<section class="${CARD} overflow-hidden bg-gradient-to-b from-white to-accent-50 dark:from-zinc-900 dark:to-slate-900"><button data-m="signal" aria-expanded="${o}" class="${o?'open ':''}w-full px-4 pt-5 pb-3 text-center select-none focus:outline-none">
+ <div class="relative mx-auto w-full max-w-[280px]"><svg viewBox="0 0 240 205" class="w-full block" aria-hidden="true"><g fill="none" stroke-width="14">
+  <path d="${arc(0,1,92)}" stroke-linecap="round" class="stroke-slate-200 dark:stroke-zinc-800"/>
+  <path d="${arc(0,.333,92)}" stroke="#ef4444" opacity=".25"/><path d="${arc(.333,.5,92)}" stroke="#f59e0b" opacity=".25"/><path d="${arc(.5,1,92)}" stroke="#10b981" opacity=".25"/>
+  <path d="${arc(0,f,92)}" stroke="${L.bar}" stroke-linecap="round"/></g>
+  <circle cx="${k[0]}" cy="${k[1]}" r="9" fill="#fff" stroke="${L.bar}" stroke-width="5"/>
+  <text x="53" y="203" text-anchor="middle" font-size="11" class="fill-slate-400">ضعيفة</text><text x="187" y="203" text-anchor="middle" font-size="11" class="fill-slate-400">قوية</text></svg>
+  <div class="absolute inset-x-0 flex flex-col items-center gap-1" style="top:58%;transform:translateY(-50%)"><span class="ltr text-[44px] font-extrabold leading-none ${L.txt}">${v}</span>${badge('dBm')}</div></div>
+ <div class="mt-1 flex items-center justify-center gap-1"><span class="inline-flex items-center gap-1 px-4 py-2 rounded-full text-sm font-bold ${L.chip}"><span class="mi !text-base">${L.ic}</span>${vt}</span><span class="mi chev text-slate-400 !text-xl">expand_more</span></div>
+ ${W(s).essid?`<div class="mt-3 flex items-center justify-center gap-1.5 text-sm text-slate-600 dark:text-zinc-300 min-w-0"><span class="mi !text-lg text-accent-600 dark:text-accent-400">cell_tower</span><span dir="ltr" class="truncate">${esc(W(s).essid)}</span></div>`:''}</button>${detail('signal',s)}
+ ${tl.length?`<div class="px-4 pb-4 pt-1 grid grid-cols-${tl.length} gap-2">${tl.map(i=>tile(i,s)).join('')}</div>`:''}
+ ${tm?`<div class="border-t border-slate-200/70 dark:border-zinc-800"><div class="px-4 pt-3 pb-2 flex items-center gap-2 font-bold text-sm">${tm.label}${badge(tm.term)}</div>${detail(S.tile,s,true)}</div>`:''}</section>`}
+
+function box(){if(!$('#nanoBox').length)$('#home').html('<div id="userBox"></div><div id="nanoBox" class="space-y-4"></div>')}
+function renderUser(){box();$('#userBox').html(userBlock())}
+function render(){const s=S.st;if(!s)return;box();const y=window.scrollY,Q=['quality','capacity','tx','rx','beacon'],D=['cpu','eth'];
+ $('#nanoBox').html(hero(s)
+  +group('جودة الاتصال والسرعة','speed',Q.map(i=>metricRow(i,s)).join(''),gb(Q,s))
+  +group('معلومات الارتباط بالبرج','settings_input_antenna',INFO.map(r=>infoRow(r,s)).join(''))
+  +group('معلومات الجهاز','developer_board',D.map(i=>metricRow(i,s)).join('')+INFO2.map(r=>infoRow(r,s)).join(''),gb(D,s))
+  +`<p class="text-center text-xs text-slate-400">آخر تحديث ${new Date().toLocaleTimeString('ar-IQ',{hour:'2-digit',minute:'2-digit',second:'2-digit'})} · يتحدث تلقائياً</p>`);
+ window.scrollTo(0,y)}
+$('#home').on('click','[data-t]',function(){S.tile=S.tile===this.dataset.t?'':this.dataset.t;render()});
+$('#home').on('click','[data-m]',function(){const id=this.dataset.m,o=!S.open[id];S.open[id]=o;$(this).attr('aria-expanded',o).toggleClass('open',o).next('.m-panel').toggleClass('hidden',!o)});
+$('#home').on('click','#uRetry',()=>loadUser());
+$('#home').on('click','#subToggle',function(){S.sub=!S.sub;$(this).attr('aria-expanded',S.sub);$('#subMore').toggleClass('hidden',!S.sub);$('#subCard').toggleClass('open',S.sub)});
+
+function show(id){$('#splash,#login,#home').addClass('hidden');$('#'+id).removeClass('hidden');const h=id==='home';$('#btnRefresh,#btnShare').toggleClass('hidden',!h).toggleClass('grid',h)}
+function toast(msg,type){const c=type==='error'?'bg-red-600':'bg-slate-800 dark:bg-zinc-700';const $t=$(`<div class="pointer-events-auto max-w-sm px-4 py-3 rounded-xl text-white text-sm shadow-lg ${c}"></div>`).text(msg).appendTo('#toasts');setTimeout(()=>$t.fadeOut(200,()=>$t.remove()),3200)}
+function showLogin(err,c){S.on=false;clearTimeout(timer);c=c||store.get('creds',null)||{};$('#fIp').val(c.ip||'');$('#fUser').val(c.username||'ubnt');$('#fPass').val(c.password||'');
+ $('#loginErr').toggleClass('hidden',!err).text(err||'');show('login');setBtn(false)}
+function setBtn(b){$('#btnLogin').prop('disabled',b).toggleClass('opacity-70',b).html(b?'<span class="mi animate-spin">progress_activity</span>جارٍ الاتصال...':'دخول')}
+
+/* ---------- Connect & poll ---------- */
+let timer=null,busy=false,fails=0;
+const pollMs=()=>{const v=store.get('poll',APP_CONFIG.pollMs);return[1000,2000,5000].includes(v)?v:APP_CONFIG.pollMs};
+async function connect(c){
+  await call('nanoLogin',{ip:c.ip,username:c.username,password:c.password});
+  S.st=await call('nanoStatus',{ip:c.ip});S.c=c;S.on=true;fails=0;S.user=null;S.uState='load';
+  store.set('creds',c);store.set('auto',true);show('home');render();schedule();loadUser()}
+const errMsg=e=>(e&&e.message)||'تعذر الاتصال بالنانو. تأكد من الـ IP وبيانات الدخول.';
+function loadUser(){S.uState='load';S.uTry=Date.now();if(S.on)renderUser();return call('getUserData').then(u=>{S.user=u;S.uState='ok'}).catch(()=>{S.uState='err'}).then(()=>{if(S.on)renderUser()})}
+function schedule(){clearTimeout(timer);timer=setTimeout(async()=>{if(S.on&&!document.hidden)await refresh();if(S.on)schedule()},pollMs())}
+async function refresh(manual){if(busy||!S.on)return;busy=true;$('#rfIcon').addClass('animate-spin');
+  try{S.st=await call('nanoStatus',{ip:S.c.ip});fails=0;render();if(manual)toast('تم التحديث');if(S.uState==='err'&&(manual||Date.now()-S.uTry>30000))loadUser()}
+  catch(e){try{await call('nanoLogin',S.c);S.st=await call('nanoStatus',{ip:S.c.ip});fails=0;render()}
+   catch(e2){fails++;toast('تعذر تحديث الإشارة','error');if(fails>=3)showLogin(errMsg(e2),S.c)}}
+  finally{busy=false;$('#rfIcon').removeClass('animate-spin')}}
+$(document).on('visibilitychange',()=>{if(!document.hidden&&S.on)refresh()});
+$('#btnRefresh').on('click',()=>refresh(true));
+
+$('#loginForm').on('submit',async ev=>{ev.preventDefault();
+  const c={ip:$('#fIp').val().trim(),username:$('#fUser').val().trim(),password:$('#fPass').val()};
+  if(!/^[\w.\-:]+$/.test(c.ip))return $('#loginErr').removeClass('hidden').text('أدخل عنوان IP صحيحاً للنانو.');
+  if(!c.username)return $('#loginErr').removeClass('hidden').text('أدخل اسم المستخدم.');
+  $('#loginErr').addClass('hidden');setBtn(true);
+  try{await connect(c)}catch(e){showLogin(errMsg(e),c)}});
+$('.ipChip').on('click',function(){$('#fIp').val($(this).data('ip')).trigger('focus')});
+$('#togglePass').on('click',()=>{const p=$('#fPass'),h=p.attr('type')==='password';p.attr('type',h?'text':'password');$('#togglePass .mi').text(h?'visibility_off':'visibility')});
+
+/* ---------- Share, theme, settings ---------- */
+$('#btnShare').on('click',()=>{const s=S.st;if(!s)return;const v=val(M.signal,s),u=S.user,d=u&&u.activeDaysLeft?u.activeDaysLeft.value:null;
+  const t=['اشتراكي نت',W(s).essid?'السكتر: '+W(s).essid:'','قوة الإشارة: '+v+' dBm ('+M.signal.txt[rate(M.signal,v)]+')',val(M.snr,s)!=null?'SNR: '+val(M.snr,s)+' dB':'',val(M.ccq,s)!=null?'CCQ: '+val(M.ccq,s)+'%':'',d?'الأيام المتبقية: '+d:''].filter(Boolean).join('\n');
+  call('share',{text:t}).catch(()=>toast('تعذرت المشاركة','error'))});
+function applyTheme(d,save){const r=document.documentElement;r.classList.toggle('dark',d);r.style.colorScheme=d?'dark':'light';$('meta[name=theme-color]').attr('content',d?'#09090b':'#f0f9ff');$('#themeIcon').text(d?'light_mode':'dark_mode');if(save)store.set('theme',d?'dark':'light')}
+$('#btnTheme').on('click',()=>applyTheme(!document.documentElement.classList.contains('dark'),true));
+const setPollUI=()=>$('.pollBtn').each(function(){const a=+this.dataset.ms===pollMs();$(this).toggleClass('bg-white dark:bg-zinc-700 shadow text-accent-700 dark:text-accent-400',a).toggleClass('text-slate-500 dark:text-zinc-400',!a).attr('aria-pressed',a)});
+$('.pollBtn').on('click',function(){store.set('poll',+this.dataset.ms);setPollUI();if(S.on)schedule()});
+const openM=()=>{setPollUI();$('#mData').val('');$('#modal').removeClass('hidden').addClass('flex')},closeM=()=>$('#modal').addClass('hidden').removeClass('flex');
+$('#btnMenu').on('click',openM);$('#mClose').on('click',closeM);$('#modal').on('click',e=>{if(e.target.id==='modal')closeM()});
+$(document).on('keydown',e=>{if(e.key==='Escape')closeM()});
+$('#mExport').on('click',()=>{const j=JSON.stringify({app:'eshtiraki',creds:store.get('creds',null),theme:store.get('theme',null)},null,2);$('#mData').val(j);
+  if(window.Android)call('share',{text:j}).catch(()=>{});
+  else try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([j],{type:'application/json'}));a.download='eshtiraki-backup.json';a.click()}catch(e){toast('انسخ النص يدوياً','error')}});
+function doImport(txt){try{const d=JSON.parse(txt);if(d.app!=='eshtiraki'||!d.creds||!d.creds.ip)throw 0;store.set('creds',d.creds);if(d.theme){store.set('theme',d.theme);applyTheme(d.theme==='dark')}closeM();toast('تم استيراد البيانات');showLogin('',d.creds)}catch(e){toast('ملف غير صالح','error')}}
+$('#mImport').on('click',()=>doImport($('#mData').val()));
+$('#mFile').on('change',function(){const f=this.files[0];if(!f)return;const r=new FileReader();r.onload=()=>$('#mData').val(r.result);r.readAsText(f)});
+$('#mLogout').on('click',()=>{store.set('auto',false);closeM();showLogin('',store.get('creds',null))});
+
+/* ---------- Boot ---------- */
+$('#appName').text(APP_CONFIG.name);$('#mVer').text(APP_CONFIG.name+' · v'+APP_CONFIG.version);
+applyTheme(document.documentElement.classList.contains('dark'),false);
+(async()=>{const c=store.get('creds',null);
+  if(c&&c.ip&&store.get('auto',true)){show('splash');try{await connect(c)}catch(e){showLogin(errMsg(e),c)}}else showLogin('',c)})();
+});
+</script>
+<script>if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js")</script>
+</body>
+</html>
